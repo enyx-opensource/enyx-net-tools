@@ -62,8 +62,13 @@ Application::Application(const Configuration & configuration)
 void
 Application::run()
 {
-    async_receive();
-    async_send();
+    if (configuration_.direction != Configuration::TX)
+        async_receive();
+
+    if (configuration_.direction == Configuration::RX)
+        finish_send();
+    else
+        async_send();
 
     ao::deadline_timer t(io_service_, estimate_test_duration());
     t.async_wait(boost::bind(&Application::on_timeout, this,
@@ -135,6 +140,9 @@ Application::on_receive(std::size_t bytes_transferred,
 void
 Application::on_receive_complete()
 {
+    statistics_.receive_duration = pt::microsec_clock::universal_time() -
+                                   statistics_.start_date;
+
     std::cout << "Finished receiving" << std::endl;
     on_finish();
 }
@@ -191,12 +199,7 @@ Application::on_send(std::size_t bytes_transferred,
         if (statistics_.sent_bytes_count < configuration_.size)
             async_send(size);
         else
-        {
-            statistics_.receive_duration = pt::microsec_clock::universal_time() -
-                                           statistics_.start_date;
-
             finish_send();
-        }
     }
 }
 
