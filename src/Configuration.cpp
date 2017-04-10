@@ -94,6 +94,49 @@ operator<<(std::ostream & out, const Configuration::Mode & mode)
     }
 }
 
+std::istream &
+operator>>(std::istream & in, Configuration::Direction & direction)
+{
+    std::istream::sentry sentry(in);
+
+    if (sentry)
+    {
+        std::string s;
+        in >> s;
+
+        if (s == "tx")
+            direction = Configuration::TX;
+        else if (s == "rx")
+            direction = Configuration::RX;
+        else if (s == "both")
+            direction = Configuration::BOTH;
+        else
+            throw std::runtime_error("Unexpected verification mode");
+    }
+
+    return in;
+}
+
+std::ostream &
+operator<<(std::ostream & out, const Configuration::Direction & direction)
+{
+    std::ostream::sentry sentry(out);
+
+    if (! sentry)
+        return out;
+
+    switch (direction)
+    {
+    default:
+    case Configuration::RX:
+        return out << "tx";
+    case Configuration::TX:
+        return out << "tx";
+    case Configuration::BOTH:
+        return out << "both";
+    }
+}
+
 std::ostream &
 operator<<(std::ostream & out, const Configuration & configuration)
 {
@@ -102,6 +145,7 @@ operator<<(std::ostream & out, const Configuration & configuration)
     if (sentry)
     {
         out << "mode: " << configuration.mode << "\n";
+        out << "direction: " << configuration.direction << "\n";
         out << "endpoint: " << configuration.endpoint << "\n";
         out << "send_bandwidth: "
             << configuration.send_bandwidth << "/s\n";

@@ -39,11 +39,13 @@ struct Configuration
 {
     enum Mode { CLIENT, SERVER };
     enum Verify { NONE, FIRST, ALL };
+    enum Direction { RX, TX, BOTH };
     enum ShutdownPolicy { WAIT_FOR_PEER, SEND_COMPLETE, RECEIVE_COMPLETE };
     enum Protocol { UDP, TCP };
 
     Mode mode;
     Verify verify;
+    Direction direction;
     std::string endpoint;
     Size send_bandwidth;
     Size receive_bandwidth;
@@ -63,6 +65,12 @@ operator<<(std::ostream & out, const Configuration::Verify & verify);
 
 std::ostream &
 operator<<(std::ostream & out, const Configuration::Mode & mode);
+
+std::istream &
+operator>>(std::istream & in, Configuration::Direction & direction);
+
+std::ostream &
+operator<<(std::ostream & out, const Configuration::Direction & direction);
 
 std::ostream &
 operator<<(std::ostream & out, const Configuration & configuration);
