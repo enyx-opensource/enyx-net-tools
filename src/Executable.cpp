@@ -96,7 +96,7 @@ parse_command_line(int argc, char** argv)
         ("duration-margin,d",
             po::value<pt::time_duration>(&c.duration_margin)
                 ->default_value(pt::not_a_date_time, "infinity"),
-            "Extra time from theorical test time allowed to"
+            "Extra time from theoretical test time allowed to"
             " complete without timeout error\n")
         ("help,h",
             "Print the command lines arguments\n");
