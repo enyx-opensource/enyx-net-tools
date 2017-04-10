@@ -131,6 +131,16 @@ parse_command_line(int argc, char** argv)
     if (! args.count("size") || args["size"].as<Size>() == 0)
         throw std::runtime_error("--size is required");
 
+    if (c.direction == Configuration::TX &&
+            c.shutdown_policy == Configuration::RECEIVE_COMPLETE)
+        throw std::runtime_error("TX mode isn't compatible with shutdown "
+                "policy receive_complete");
+
+    if (c.direction == Configuration::RX &&
+            c.shutdown_policy == Configuration::SEND_COMPLETE)
+        throw std::runtime_error("RX mode isn't compatible with shutdown "
+                "policy send_complete");
+
     if (args.count("connect"))
         c.mode = Configuration::CLIENT;
     else if (args.count("listen"))
