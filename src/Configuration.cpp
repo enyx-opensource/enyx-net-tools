@@ -111,7 +111,7 @@ operator>>(std::istream & in, Configuration::Direction & direction)
         else if (s == "both")
             direction = Configuration::BOTH;
         else
-            throw std::runtime_error("Unexpected verification mode");
+            throw std::runtime_error("Unexpected mode option value");
     }
 
     return in;
