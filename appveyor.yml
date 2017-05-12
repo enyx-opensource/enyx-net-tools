@@ -2,8 +2,8 @@ platform:
     - x64
 
 environment:
-    BOOST_ROOT: C:\Libraries\boost
-    BOOST_LIBRARYDIR: C:\Libraries\boost\lib64-msvc-12.0
+    BOOST_ROOT: C:/Libraries/boost_1_63_0
+    BOOST_LIBRARYDIR: C:/Libraries/boost_1_63_0/lib64-msvc-14.0
 
 configuration:
     - Release
@@ -11,7 +11,11 @@ configuration:
 before_build:
     - cmd: md build
     - cmd: cd build
-    - cmd: cmake -G "Visual Studio 12 2013 Win64" -DCMAKE_BUILD_TYPE=%configuration% -DBOOST_ROOT="%BOOST_ROOT%" -DBOOST_LIBRARYDIR="%BOOST_LIBRARYDIR%" -DBoost_USE_STATIC_LIBS=ON ..
+    - cmd: cmake -G "Visual Studio 14 2015 Win64" \
+                 -DCMAKE_BUILD_TYPE=%configuration% \
+                 -DBOOST_ROOT="%BOOST_ROOT%" \
+                 -DBOOST_LIBRARYDIR="%BOOST_LIBRARYDIR%" \
+                 -DBoost_USE_STATIC_LIBS=ON ..
 
 build:
     project: C:\projects\net-tools\build\enyx-net-tools.sln
