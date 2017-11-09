@@ -42,27 +42,15 @@ Socket::Socket(boost::asio::io_service & io_service,
                const Configuration & configuration)
     : io_service_(io_service), socket_(io_service_)
 {
-    const ao::ip::tcp::endpoint e(resolve(configuration.endpoint));
-
     switch (configuration.mode)
     {
         default:
         case Configuration::CLIENT:
-            connect(e);
+            connect(configuration);
             break;
         case Configuration::SERVER:
-            listen(e, pt::pos_infin);
+            listen(configuration, pt::pos_infin);
             break;
-    }
-
-
-    if (configuration.windows)
-    {
-        ao::socket_base::receive_buffer_size r(configuration.windows);
-        socket_.set_option(r);
-
-        ao::socket_base::send_buffer_size s(configuration.windows);
-        socket_.set_option(s);
     }
 }
 
@@ -87,20 +75,31 @@ Socket::resolve(const std::string & s)
 }
 
 void
-Socket::connect(const ao::ip::tcp::endpoint & e)
+Socket::connect(const Configuration & configuration)
 {
+    const ao::ip::tcp::endpoint e(resolve(configuration.endpoint));
+
     socket_.open(e.protocol());
+    setup_windows(configuration, socket_);
+
     socket_.connect(e);
 
     std::cout << "Connected to '" << e << "'" << std::endl;
 }
 
 void
-Socket::listen(const ao::ip::tcp::endpoint & e,
+Socket::listen(const Configuration & configuration,
                const boost::posix_time::time_duration & timeout)
 {
+    const ao::ip::tcp::endpoint e(resolve(configuration.endpoint));
+
     // Schedule an asynchronous accept.
-    ao::ip::tcp::acceptor a(io_service_, e);
+    ao::ip::tcp::acceptor a(io_service_, e.protocol());
+    ao::socket_base::reuse_address reuse_address(true);
+    a.set_option(reuse_address);
+    setup_windows(configuration, a);
+    a.bind(e);
+    a.listen();
 
     std::cout << "Waiting " << timeout
               << " for client to connect" << std::endl;
@@ -122,6 +121,22 @@ Socket::listen(const ao::ip::tcp::endpoint & e,
     if (failure)
         throw boost::system::system_error(failure);
 }
+
+template<typename SocketType>
+void
+Socket::setup_windows(const Configuration & configuration,
+                      SocketType & socket)
+{
+    if (configuration.windows)
+    {
+        ao::socket_base::receive_buffer_size r(configuration.windows);
+        socket.set_option(r);
+
+        ao::socket_base::send_buffer_size s(configuration.windows);
+        socket.set_option(s);
+    }
+}
+
 
 void
 Socket::shutdown_send()

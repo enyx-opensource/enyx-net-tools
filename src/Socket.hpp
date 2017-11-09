@@ -85,11 +85,16 @@ private:
     resolve(const std::string & endpoint);
 
     void
-    connect(const boost::asio::ip::tcp::endpoint & e);
+    connect(const Configuration & configuration);
 
     void
-    listen(const boost::asio::ip::tcp::endpoint & e,
+    listen(const Configuration & configuration,
            const boost::posix_time::time_duration & timeout);
+
+    template<typename SocketType>
+    static void
+    setup_windows(const Configuration & configuration,
+                  SocketType & socket);
 
 private:
     boost::asio::io_service & io_service_;
