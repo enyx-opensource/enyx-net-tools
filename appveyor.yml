@@ -1,9 +1,11 @@
+image: Visual Studio 2017
+
 platform:
     - x64
 
 environment:
-    BOOST_ROOT: C:/Libraries/boost_1_63_0
-    BOOST_LIBRARYDIR: C:/Libraries/boost_1_63_0/lib64-msvc-14.0
+    BOOST_ROOT: C:/Libraries/boost_1_67_0
+    BOOST_LIBRARYDIR: C:/Libraries/boost_1_67_0/lib64-msvc-15.0
 
 configuration:
     - Release
@@ -11,7 +13,7 @@ configuration:
 before_build:
     - cmd: md build
     - cmd: cd build
-    - cmd: cmake -G "Visual Studio 14 2015 Win64" \
+    - cmd: cmake -G "Visual Studio 15 2017 Win64" \
                  -DCMAKE_BUILD_TYPE=%configuration% \
                  -DBOOST_ROOT="%BOOST_ROOT%" \
                  -DBOOST_LIBRARYDIR="%BOOST_LIBRARYDIR%" \

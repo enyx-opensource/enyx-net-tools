@@ -5,10 +5,11 @@ project(enyx-net-tools)
 
 find_package(Threads REQUIRED)
 set(Boost_NO_BOOST_CMAKE ON)
-find_package(Boost 1.40 REQUIRED COMPONENTS thread system regex program_options date_time regex)
+find_package(Boost 1.40 REQUIRED
+    COMPONENTS thread system regex program_options date_time regex)
 
 if (WIN32)
-    add_definitions(-D_WIN32_WINNT=0x0601) # Windows 7
+    add_definitions(-D_WIN32_WINNT=0x0A00) # Windows 10
 endif ()
 
 add_definitions(-DBOOST_FOREACH_NO_RVALUE_DETECTION=1)
