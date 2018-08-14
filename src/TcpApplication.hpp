@@ -24,35 +24,45 @@
 
 #pragma once
 
-#include <stdint.h>
-#include <iosfwd>
+#include <cstddef>
+
+#include <boost/system/error_code.hpp>
+
+#include "Application.hpp"
+#include "Configuration.hpp"
+#include "TcpSocket.hpp"
 
 namespace enyx {
 namespace tcp_tester {
 
-class Size
+class TcpApplication : public Application
 {
 public:
-    constexpr
-    Size(uint64_t value = 0ULL)
-        : value_(value)
-    { }
-
-    operator const uint64_t &() const
-    { return value_; }
-
-    operator uint64_t &()
-    { return value_; }
+    TcpApplication(const Configuration & configuration);
 
 private:
-    uint64_t value_;
+    virtual void
+    async_receive(std::size_t slice_remaining_size = 0ULL) override;
+
+    virtual void
+    finish_receive() override;
+
+    void
+    on_eof(std::size_t bytes_transferred,
+           const boost::system::error_code & failure);
+
+    virtual void
+    async_send(std::size_t slice_remaining_size = 0ULL) override;
+
+    virtual void
+    finish_send() override;
+
+    virtual void
+    finish() override;
+
+private:
+    TcpSocket socket_;
 };
-
-std::istream &
-operator>>(std::istream & in, Size & size);
-
-std::ostream &
-operator<<(std::ostream & out, const Size & size);
 
 } // namespace tcp_tester
 } // namespace enyx

@@ -24,49 +24,67 @@
 
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
+#include <cstddef>
 #include <vector>
 
 #include <boost/system/error_code.hpp>
 
 #include "Configuration.hpp"
 #include "BandwidthThrottle.hpp"
-#include "Socket.hpp"
 #include "Statistics.hpp"
 
 namespace enyx {
 namespace tcp_tester {
 
-class Application
+struct Application
 {
 public:
+    explicit
     Application(const Configuration & configuration);
 
     void
     run();
 
 private:
-    typedef std::vector<uint8_t> buffer_type;
+    using buffer_type = std::vector<std::uint8_t>;
 
-    enum { BUFFER_SIZE = 16 * 1024 };
+    static constexpr std::size_t BUFFER_SIZE = 16 * 1024;
 
-private:
+protected:
     boost::posix_time::time_duration
     estimate_test_duration();
 
     void
     on_timeout(const boost::system::error_code & failure);
 
-    void
-    async_receive(std::size_t slice_remaining_size = 0ULL);
+    virtual void
+    async_receive(std::size_t slice_remaining_size = 0ULL) = 0;
 
     void
     on_receive(std::size_t bytes_transferred,
                const boost::system::error_code & failure,
                std::size_t slice_remaining_size);
 
+    virtual void
+    finish_receive() = 0;
+
     void
     on_receive_complete();
+
+    virtual void
+    async_send(std::size_t slice_remaining_size = 0ULL) = 0;
+
+    void
+    on_send(std::size_t bytes_transferred,
+            const boost::system::error_code & failure,
+            std::size_t slice_remaining_size);
+
+    virtual void
+    finish_send() = 0;
+
+    void
+    on_send_complete();
 
     void
     verify(std::size_t bytes_transferred);
@@ -75,34 +93,18 @@ private:
     verify(std::size_t offset, uint8_t expected_byte);
 
     void
-    async_receive_eof();
-
-    void
-    on_eof(std::size_t bytes_transferred,
-           const boost::system::error_code & failure);
-
-    void
-    async_send(std::size_t slice_remaining_size = 0ULL);
-
-    void
-    on_send(std::size_t bytes_transferred,
-            const boost::system::error_code & failure,
-            std::size_t slice_remaining_size);
-
-    void
-    on_send_complete();
-
-    void
     abort(const boost::system::error_code & failure);
 
     void
-    finish();
+    on_finish();
 
-private:
+    virtual void
+    finish() = 0;
+
+protected:
     Configuration configuration_;
     boost::asio::io_service io_service_;
     boost::asio::io_service::work work_;
-    Socket socket_;
     Statistics statistics_;
     boost::system::error_code failure_;
     buffer_type send_buffer_;
@@ -113,3 +115,4 @@ private:
 
 } // namespace tcp_tester
 } // namespace enyx
+

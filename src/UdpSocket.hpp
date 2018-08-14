@@ -25,69 +25,54 @@
 #pragma once
 
 #include <boost/asio/io_service.hpp>
+#include <boost/asio/ip/udp.hpp>
 #include <boost/system/error_code.hpp>
-#include <boost/regex.hpp>
 
 #include "Configuration.hpp"
+#include "Socket.hpp"
 
 namespace enyx {
 namespace tcp_tester {
 
-class Socket
+class UdpSocket : public Socket
 {
 public:
+    using socket_type = boost::asio::ip::udp::socket;
+
+public:
     explicit
-    Socket(boost::asio::io_service & io_service);
+    UdpSocket(boost::asio::io_service & io_service,
+              const Configuration & configuration);
 
-protected:
-    template<typename Protocol>
-    typename Protocol::endpoint
-    resolve(const std::string & endpoint);
+    template<typename MutableBufferSequence, typename ReadHandler>
+    void
+    async_receive(const MutableBufferSequence & buffers, ReadHandler handler)
+    {
+        socket_.async_receive(buffers, handler);
+    }
 
-    template<typename SocketType>
-    static void
-    setup_windows(const Configuration & configuration,
-                  SocketType & socket);
+    template<typename ConstBufferSequence, typename WriteHandler>
+    void
+    async_send(const ConstBufferSequence & buffers, WriteHandler handler)
+    {
+        socket_.async_send(buffers, handler);
+    }
 
-protected:
-    boost::asio::io_service & io_service_;
+    void
+    close();
+
+private:
+    void
+    connect(const Configuration & configuration);
+
+    void
+    listen(const Configuration & configuration,
+           const boost::posix_time::time_duration & timeout);
+
+private:
+    socket_type socket_;
 };
-
-template<typename Protocol>
-typename Protocol::endpoint
-Socket::resolve(const std::string & s)
-{
-    boost::smatch m;
-    {
-        boost::regex r("([^:]+):([^:]+)");
-        if (! boost::regex_match(s, m, r))
-        {
-            std::ostringstream error;
-            error << "invalid endpoint'" << s << "'";
-            throw std::runtime_error(error.str());
-        }
-    }
-
-    typename Protocol::resolver::query q(m.str(1), m.str(2));
-
-    typename Protocol::resolver r(io_service_);
-    return *r.resolve(q);
-}
-
-template<typename SocketType>
-void
-Socket::setup_windows(const Configuration & configuration,
-                      SocketType & socket)
-{
-    if (configuration.windows)
-    {
-        typename SocketType::receive_buffer_size r(configuration.windows);
-        socket.set_option(r);
-
-        typename SocketType::send_buffer_size s(configuration.windows);
-        socket.set_option(s);
-    }
-}
 
 } // namespace tcp_tester
 } // namespace enyx
+

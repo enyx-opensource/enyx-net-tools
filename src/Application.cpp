@@ -32,8 +32,6 @@
 #include <boost/asio/error.hpp>
 
 #include "Error.hpp"
-#include "Socket.hpp"
-#include "Statistics.hpp"
 
 namespace enyx {
 namespace tcp_tester {
@@ -44,7 +42,6 @@ namespace pt = boost::posix_time;
 Application::Application(const Configuration & configuration)
     : configuration_(configuration),
       io_service_(), work_(io_service_),
-      socket_(io_service_, configuration),
       statistics_(),
       failure_(),
       send_buffer_(BUFFER_SIZE),
@@ -60,14 +57,14 @@ Application::Application(const Configuration & configuration)
         send_buffer_[i] = uint8_t(i);
 
     std::cout << configuration_ << std::endl;
-
-    async_receive();
-    async_send();
 }
 
 void
 Application::run()
 {
+    async_receive();
+    async_send();
+
     ao::deadline_timer t(io_service_, estimate_test_duration());
     t.async_wait(boost::bind(&Application::on_timeout, this,
                              ao::placeholders::error));
@@ -111,26 +108,6 @@ Application::on_timeout(const boost::system::error_code & failure)
 }
 
 void
-Application::async_receive(std::size_t slice_remaining_size)
-{
-    // If we've sent all data allowed within the current slice.
-    if (slice_remaining_size == 0)
-        // The throttle will call this method again
-        // when the next slice will start with a slice_remaining_size
-        // set as required by bandwidth.
-        receive_throttle_.delay(boost::bind(&Application::async_receive,
-                                            this, _1));
-    else
-        socket_.async_receive(boost::asio::buffer(receive_buffer_,
-                                                  slice_remaining_size),
-                              boost::bind(&Application::on_receive,
-                                          this,
-                                          ao::placeholders::bytes_transferred,
-                                          ao::placeholders::error,
-                                          slice_remaining_size));
-}
-
-void
 Application::on_receive(std::size_t bytes_transferred,
                         const boost::system::error_code & failure,
                         std::size_t slice_remaining_size)
@@ -151,31 +128,8 @@ Application::on_receive(std::size_t bytes_transferred,
         if (statistics_.received_bytes_count < configuration_.size)
             async_receive(size);
         else
-            async_receive_eof();
+            finish_receive();
     }
-}
-
-void
-Application::async_receive_eof()
-{
-    socket_.async_receive(boost::asio::buffer(receive_buffer_, 1),
-                          boost::bind(&Application::on_eof,
-                                      this,
-                                      ao::placeholders::bytes_transferred,
-                                      ao::placeholders::error));
-
-}
-
-void
-Application::on_eof(std::size_t bytes_transferred,
-                    const boost::system::error_code & failure)
-{
-    if (failure == ao::error::eof)
-        on_receive_complete();
-    else if (failure)
-        abort(failure);
-    else
-        abort(error::unexpected_data);
 }
 
 void
@@ -184,7 +138,7 @@ Application::on_receive_complete()
     std::cout << "Finished receiving" << std::endl;
 
     if (statistics_.sent_bytes_count == configuration_.size)
-        finish();
+        on_finish();
 }
 
 void
@@ -223,31 +177,6 @@ Application::verify(std::size_t offset, uint8_t expected_byte)
 }
 
 void
-Application::async_send(std::size_t slice_remaining_size)
-{
-    if (slice_remaining_size == 0)
-        send_throttle_.delay(boost::bind(&Application::async_send,
-                                         this, _1));
-    else
-    {
-        std::size_t remaining_size = configuration_.size -
-                                     statistics_.sent_bytes_count;
-
-        slice_remaining_size = std::min(slice_remaining_size, remaining_size);
-        std::size_t offset = statistics_.sent_bytes_count % send_buffer_.size();
-        std::size_t size = std::min(slice_remaining_size,
-                                    send_buffer_.size() - offset);
-
-        socket_.async_send(boost::asio::buffer(&send_buffer_[offset], size),
-                           boost::bind(&Application::on_send,
-                                       this,
-                                       ao::placeholders::bytes_transferred,
-                                       ao::placeholders::error,
-                                       slice_remaining_size));
-    }
-}
-
-void
 Application::on_send(std::size_t bytes_transferred,
                      const boost::system::error_code & failure,
                      std::size_t slice_remaining_size)
@@ -268,8 +197,7 @@ Application::on_send(std::size_t bytes_transferred,
             statistics_.receive_duration = pt::microsec_clock::universal_time() -
                                            statistics_.start_date;
 
-            socket_.shutdown_send();
-            on_send_complete();
+            finish_send();
         }
     }
 }
@@ -280,21 +208,20 @@ Application::on_send_complete()
     std::cout << "Finished sending" << std::endl;
 
     if (statistics_.received_bytes_count == configuration_.size)
-        finish();
+        on_finish();
 }
 
 void
 Application::abort(const boost::system::error_code & failure)
 {
     failure_ = failure;
-    socket_.close();
-    io_service_.stop();
+    on_finish();
 }
 
 void
-Application::finish()
+Application::on_finish()
 {
-    socket_.close();
+    finish();
     io_service_.stop();
 }
 

@@ -31,7 +31,8 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include "Configuration.hpp"
-#include "Application.hpp"
+#include "TcpApplication.hpp"
+#include "UdpApplication.hpp"
 
 namespace enyx {
 namespace tcp_tester {
@@ -41,7 +42,7 @@ namespace pt = boost::posix_time;
 
 namespace {
 
-const Size DEFAULT_BANDWIDTH = Size(128 * 1024 * 1024);
+constexpr Size DEFAULT_BANDWIDTH = Size(128 * 1024 * 1024);
 
 Configuration
 parse_command_line(int argc, char** argv)
@@ -131,7 +132,7 @@ run(int argc, char** argv)
 {
     std::cout << "Starting.." << std::endl;
 
-    Application(parse_command_line(argc, argv)).run();
+    TcpApplication(parse_command_line(argc, argv)).run();
 }
 
 }

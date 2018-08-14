@@ -11,14 +11,14 @@ macro(iperf_test test_name)
 endmacro()
 
 iperf_test(tcp_verify_none
-    SERVER "--size=1MiB --verify=none --duration-margin=01:00"
-    CLIENT "--size=1MiB --verify=none --duration-margin=01:00")
+    SERVER "--size=1MiB --verify=none"
+    CLIENT "--size=1MiB --verify=none")
 
 iperf_test(tcp_verify_first
-    SERVER "--size=1MiB --verify=first --duration-margin=01:00"
-    CLIENT "--size=1MiB --verify=first --duration-margin=01:00")
+    SERVER "--size=1MiB --verify=first"
+    CLIENT "--size=1MiB --verify=first")
 
 iperf_test(tcp_verify_all
-    SERVER "--size=1MiB --verify=all --duration-margin=01:00"
-    CLIENT "--size=1MiB --verify=all --duration-margin=01:00")
+    SERVER "--size=1MiB --verify=all"
+    CLIENT "--size=1MiB --verify=all")
 

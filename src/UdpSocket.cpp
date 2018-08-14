@@ -22,37 +22,26 @@
  * SOFTWARE.
  */
 
-#pragma once
-
-#include <stdint.h>
-#include <iosfwd>
+#include "UdpSocket.hpp"
 
 namespace enyx {
 namespace tcp_tester {
 
-class Size
+namespace ao = boost::asio;
+
+UdpSocket::UdpSocket(boost::asio::io_service & io_service,
+                     const Configuration & configuration)
+    : Socket(io_service),
+      socket_(io_service_)
 {
-public:
-    constexpr
-    Size(uint64_t value = 0ULL)
-        : value_(value)
-    { }
+}
 
-    operator const uint64_t &() const
-    { return value_; }
-
-    operator uint64_t &()
-    { return value_; }
-
-private:
-    uint64_t value_;
-};
-
-std::istream &
-operator>>(std::istream & in, Size & size);
-
-std::ostream &
-operator<<(std::ostream & out, const Size & size);
+void
+UdpSocket::close()
+{
+    boost::system::error_code failure;
+    socket_.close(failure);
+}
 
 } // namespace tcp_tester
 } // namespace enyx

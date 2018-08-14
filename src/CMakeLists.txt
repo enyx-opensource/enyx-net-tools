@@ -6,6 +6,10 @@ add_executable(nx-iperf
     Size.cpp
     Socket.hpp
     Socket.cpp
+    TcpSocket.hpp
+    TcpSocket.cpp
+    UdpSocket.hpp
+    UdpSocket.cpp
     Statistics.hpp
     Statistics.cpp
     Executable.hpp
@@ -15,7 +19,11 @@ add_executable(nx-iperf
     BandwidthThrottle.hpp
     BandwidthThrottle.cpp
     Application.hpp
-    Application.cpp)
+    Application.cpp
+    UdpApplication.hpp
+    UdpApplication.cpp
+    TcpApplication.hpp
+    TcpApplication.cpp)
 
 target_link_libraries(nx-iperf
     ${Boost_LIBRARIES}
