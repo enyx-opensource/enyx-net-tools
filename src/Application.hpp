@@ -66,6 +66,9 @@ private:
                std::size_t slice_remaining_size);
 
     void
+    on_receive_complete();
+
+    void
     verify(std::size_t bytes_transferred);
 
     void
@@ -85,6 +88,9 @@ private:
     on_send(std::size_t bytes_transferred,
             const boost::system::error_code & failure,
             std::size_t slice_remaining_size);
+
+    void
+    on_send_complete();
 
     void
     abort(const boost::system::error_code & failure);

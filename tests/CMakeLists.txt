@@ -22,11 +22,3 @@ iperf_test(tcp_verify_all
     A "--size=1MiB --verify=all"
     B "--size=1MiB --verify=all")
 
-iperf_test(tcp_shutdown_send_complete
-    A "--size=1MiB --shutdown-policy=wait_for_peer"
-    B "--size=1MiB --shutdown-policy=send_complete")
-
-iperf_test(tcp_shutdown_receive_complete
-    A "--size=1MiB --shutdown-policy=wait_for_peer"
-    B "--size=1MiB --shutdown-policy=receive_complete")
-

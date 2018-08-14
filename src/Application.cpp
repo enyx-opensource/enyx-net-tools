@@ -151,11 +151,7 @@ Application::on_receive(std::size_t bytes_transferred,
         if (statistics_.received_bytes_count < configuration_.size)
             async_receive(size);
         else
-        {
-            if (configuration_.shutdown_policy == Configuration::RECEIVE_COMPLETE)
-                socket_.shutdown_send();
             async_receive_eof();
-        }
     }
 }
 
@@ -175,14 +171,20 @@ Application::on_eof(std::size_t bytes_transferred,
                     const boost::system::error_code & failure)
 {
     if (failure == ao::error::eof)
-    {
-        std::cout << "Finished receiving" << std::endl;
-        finish();
-    }
+        on_receive_complete();
     else if (failure)
         abort(failure);
     else
         abort(error::unexpected_data);
+}
+
+void
+Application::on_receive_complete()
+{
+    std::cout << "Finished receiving" << std::endl;
+
+    if (statistics_.sent_bytes_count == configuration_.size)
+        finish();
 }
 
 void
@@ -263,15 +265,22 @@ Application::on_send(std::size_t bytes_transferred,
             async_send(size);
         else
         {
-            std::cout << "Finished sending" << std::endl;
-
             statistics_.receive_duration = pt::microsec_clock::universal_time() -
                                            statistics_.start_date;
 
-            if (configuration_.shutdown_policy == Configuration::SEND_COMPLETE)
-                socket_.shutdown_send();
+            socket_.shutdown_send();
+            on_send_complete();
         }
     }
+}
+
+void
+Application::on_send_complete()
+{
+    std::cout << "Finished sending" << std::endl;
+
+    if (statistics_.received_bytes_count == configuration_.size)
+        finish();
 }
 
 void
