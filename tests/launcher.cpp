@@ -23,7 +23,9 @@ main(int argc, char **argv)
                              p::std_out > iperf_server_stdout,
                              group);
 
-    for (std::string line; std::getline(iperf_server_stdout, line); )
+    for (std::string line;
+         iperf_server.running() && std::getline(iperf_server_stdout, line);
+         )
         if (line.find("Waiting") != std::string::npos)
             break;
 
