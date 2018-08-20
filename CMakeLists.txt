@@ -10,11 +10,15 @@ set(CMAKE_CXX_FLAGS "-Wall ${CMAKE_CXX_FLAGS}")
 find_package(Threads REQUIRED)
 set(Boost_NO_BOOST_CMAKE ON)
 find_package(Boost 1.64 REQUIRED
-    COMPONENTS thread system regex program_options date_time regex filesystem)
+    COMPONENTS
+        thread system regex program_options date_time
+        regex filesystem unit_test_framework)
 
-if (WIN32)
+if(WIN32)
     add_definitions(-D_WIN32_WINNT=0x0A00) # Windows 10
-endif ()
+else()
+    add_definitions(-DBOOST_TEST_DYN_LINK)
+endif()
 
 include_directories(${Boost_INCLUDE_DIR})
 link_directories(${Boost_LIBRARY_DIR})
@@ -23,3 +27,4 @@ add_subdirectory(src)
 
 enable_testing()
 add_subdirectory(tests)
+

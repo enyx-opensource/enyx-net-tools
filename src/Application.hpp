@@ -49,7 +49,7 @@ public:
 private:
     using buffer_type = std::vector<std::uint8_t>;
 
-    static constexpr std::size_t BUFFER_SIZE = 16 * 1024;
+    static constexpr std::size_t BUFFER_SIZE = 1024 * 1024;
 
 protected:
     boost::posix_time::time_duration

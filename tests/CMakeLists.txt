@@ -1,24 +1,16 @@
-add_executable(launcher launcher.cpp)
-target_link_libraries(launcher ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-add_dependencies(launcher nx-iperf)
+add_executable(tests_iperf
+    TestIperf.cpp)
 
-macro(iperf_test test_name)
-    cmake_parse_arguments(ARG "" "" "SERVER;CLIENT" ${ARGN})
+set_target_properties(tests_iperf
+    PROPERTIES
+        COMPILE_DEFINITIONS IPERF_BINARY_PATH="$<TARGET_FILE:nx-iperf>")
 
-    add_test(NAME ${test_name}
-        COMMAND launcher "$<TARGET_FILE:nx-iperf>" "${ARG_SERVER}" "${ARG_CLIENT}")
-    set_tests_properties(${test_name} PROPERTIES TIMEOUT 10 RUN_SERIAL true)
-endmacro()
+target_link_libraries(tests_iperf
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${Boost_LIBRARIES})
 
-iperf_test(tcp_verify_none
-    SERVER "--size=1MiB --verify=none"
-    CLIENT "--size=1MiB --verify=none")
-
-iperf_test(tcp_verify_first
-    SERVER "--size=1MiB --verify=first"
-    CLIENT "--size=1MiB --verify=first")
-
-iperf_test(tcp_verify_all
-    SERVER "--size=1MiB --verify=all"
-    CLIENT "--size=1MiB --verify=all")
+add_test(iperf tests_iperf)
+set_tests_properties(iperf
+    PROPERTIES
+        TIMEOUT 10)
 

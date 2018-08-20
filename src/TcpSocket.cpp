@@ -74,8 +74,9 @@ TcpSocket::listen(const Configuration & configuration,
 {
     const ao::ip::tcp::endpoint e(resolve<ao::ip::tcp>(configuration.endpoint));
 
+    boost::asio::io_service io_service;
     // Schedule an asynchronous accept.
-    ao::ip::tcp::acceptor a(io_service_, e.protocol());
+    ao::ip::tcp::acceptor a(io_service, e.protocol());
     ao::socket_base::reuse_address reuse_address(true);
     a.set_option(reuse_address);
     setup_windows(configuration, a);
@@ -91,7 +92,7 @@ TcpSocket::listen(const Configuration & configuration,
     });
 
     // And an asynchronous wait.
-    ao::deadline_timer t(io_service_, timeout);
+    ao::deadline_timer t(io_service, timeout);
     t.async_wait([&failure](const boost::system::error_code & f) {
         failure = boost::asio::error::timed_out;
     });
@@ -99,7 +100,7 @@ TcpSocket::listen(const Configuration & configuration,
     // Wait for any to complete.
     // If the timer completed, the failure variable
     // will be set to timed_out.
-    io_service_.run_one();
+    io_service.run_one();
 
     if (failure)
         throw boost::system::system_error(failure);

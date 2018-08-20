@@ -136,9 +136,7 @@ void
 Application::on_receive_complete()
 {
     std::cout << "Finished receiving" << std::endl;
-
-    if (statistics_.sent_bytes_count == configuration_.size)
-        on_finish();
+    on_finish();
 }
 
 void
@@ -206,9 +204,6 @@ void
 Application::on_send_complete()
 {
     std::cout << "Finished sending" << std::endl;
-
-    if (statistics_.received_bytes_count == configuration_.size)
-        on_finish();
 }
 
 void
