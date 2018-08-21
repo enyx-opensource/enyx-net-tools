@@ -38,6 +38,7 @@ struct TcpFixture
         iperf_ = p::child{iperf_server_cmd.str(),
                           p::std_in < p::null,
                           p::std_out > iperf_server_stdout_,
+                          p::std_err > stderr,
                           io_service_};
 
         BOOST_TEST_CHECKPOINT("iperf client started");
@@ -58,6 +59,7 @@ struct TcpFixture
         iperf_ = p::child{iperf_client_cmd.str(),
                           p::std_in < p::null,
                           p::std_out > p::null,
+                          p::std_err > stderr,
                           io_service_};
 
         BOOST_TEST_CHECKPOINT("iperf client started");
@@ -95,9 +97,7 @@ struct TcpFixture
     on_iperf_receive(const boost::system::error_code & failure,
                      std::size_t bytes_received)
     {
-        if (failure)
-            BOOST_REQUIRE_EQUAL(boost::asio::error::eof, failure);
-        else
+        if (! failure)
         {
             std::string line;
             {
@@ -135,6 +135,7 @@ struct TcpFixture
         if (failure)
         {
             BOOST_REQUIRE_EQUAL(boost::asio::error::eof, failure);
+            peer_socket_.shutdown(peer_socket_.shutdown_send);
             peer_socket_.close();
         }
         else

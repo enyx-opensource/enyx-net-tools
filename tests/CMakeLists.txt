@@ -1,6 +1,9 @@
 add_executable(tests_iperf
     TestIperf.cpp)
 
+add_dependencies(tests_iperf
+    nx-iperf)
+
 set_target_properties(tests_iperf
     PROPERTIES
         COMPILE_DEFINITIONS IPERF_BINARY_PATH="$<TARGET_FILE:nx-iperf>")
