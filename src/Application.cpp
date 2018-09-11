@@ -209,8 +209,8 @@ Application::on_send_complete()
 void
 Application::abort(const boost::system::error_code & failure)
 {
-    failure_ = failure;
     on_finish();
+    failure_ = failure;
 }
 
 void
