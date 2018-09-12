@@ -67,6 +67,9 @@ TcpApplication::async_receive(std::size_t slice_remaining_size)
 void
 TcpApplication::finish_receive()
 {
+    if (configuration_.shutdown_policy == Configuration::RECEIVE_COMPLETE)
+        socket_.shutdown_send();
+
     socket_.async_receive(boost::asio::buffer(receive_buffer_, 1),
                           boost::bind(&TcpApplication::on_eof,
                                       this,
@@ -115,13 +118,19 @@ TcpApplication::async_send(std::size_t slice_remaining_size)
 void
 TcpApplication::finish_send()
 {
-    socket_.shutdown_send();
+    if (configuration_.shutdown_policy == Configuration::SEND_COMPLETE)
+        socket_.shutdown_send();
+
     on_send_complete();
 }
 
 void
 TcpApplication::finish()
 {
+
+    if (configuration_.shutdown_policy == Configuration::WAIT_FOR_PEER)
+        socket_.shutdown_send();
+
     socket_.close();
 }
 

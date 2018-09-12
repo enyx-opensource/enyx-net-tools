@@ -91,8 +91,16 @@ parse_command_line(int argc, char** argv)
         ("help,h",
             "Print the command lines arguments\n");
 
+    po::options_description tcp_optional("Tcp related optional arguments");
+    tcp_optional.add_options()
+        ("shutdown-policy,S",
+            po::value<Configuration::ShutdownPolicy>(&c.shutdown_policy)
+                ->default_value(Configuration::SEND_COMPLETE),
+            "Connection shutdown policy. Accepted values:\n"
+            "  - send_complete\n  - receive_complete\n  - wait_for_peer\n");
+
     po::options_description all("Allowed options");
-    all.add(required).add(optional);
+    all.add(required).add(optional).add(tcp_optional);
 
     po::variables_map args;
     po::store(po::parse_command_line(argc, argv, all), args);
