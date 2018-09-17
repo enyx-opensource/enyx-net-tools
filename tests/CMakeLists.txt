@@ -12,7 +12,7 @@ target_link_libraries(tests_iperf
     ${CMAKE_THREAD_LIBS_INIT}
     ${Boost_LIBRARIES})
 
-add_test(iperf tests_iperf)
+add_test(iperf tests_iperf  --log_level=unit_scope)
 set_tests_properties(iperf
     PROPERTIES
         TIMEOUT 10)
