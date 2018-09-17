@@ -62,6 +62,8 @@ Application::Application(const Configuration & configuration)
 void
 Application::run()
 {
+    statistics_.start_date = pt::microsec_clock::universal_time();
+
     if (configuration_.direction != Configuration::TX)
         async_receive();
 
@@ -74,7 +76,6 @@ Application::run()
     t.async_wait(boost::bind(&Application::on_timeout, this,
                              ao::placeholders::error));
 
-    statistics_.start_date = pt::microsec_clock::universal_time();
     io_service_.run();
     std::cout << statistics_ << std::endl;
 

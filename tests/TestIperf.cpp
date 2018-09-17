@@ -218,47 +218,7 @@ BOOST_FIXTURE_TEST_SUITE(ClientTcp, TcpFixture)
 BOOST_AUTO_TEST_CASE(ShutdownSendComplete)
 {
     start_peer_server();
-    start_iperf_client("--size=1MiB --shutdown-policy=send_complete");
-
-    io_service_.run();
-
-    wait_for_iperf();
-}
-
-BOOST_AUTO_TEST_CASE(ShutdownReceiveComplete)
-{
-    start_peer_server();
-    start_iperf_client("--size=1MiB --shutdown-policy=receive_complete");
-
-    io_service_.run();
-
-    wait_for_iperf();
-}
-
-BOOST_AUTO_TEST_CASE(VerifyNone)
-{
-    start_peer_server();
-    start_iperf_client("--size=1MiB --verify=none");
-
-    io_service_.run();
-
-    wait_for_iperf();
-}
-
-BOOST_AUTO_TEST_CASE(VerifyFirst)
-{
-    start_peer_server();
-    start_iperf_client("--size=1MiB --verify=first");
-
-    io_service_.run();
-
-    wait_for_iperf();
-}
-
-BOOST_AUTO_TEST_CASE(VerifyAll)
-{
-    start_peer_server();
-    start_iperf_client("--size=1MiB --verify=all");
+    start_iperf_client("--size=1MiB");
 
     io_service_.run();
 
