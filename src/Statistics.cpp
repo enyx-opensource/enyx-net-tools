@@ -69,7 +69,7 @@ operator<<(std::ostream & out, const Statistics & statistics)
                << statistics.sent_bytes_count << "\n"
                << "send_bandwidth: "
                << compute_bandwith(statistics.sent_bytes_count,
-                                   statistics.total_duration)
+                                   statistics.send_duration)
                << std::endl;
 }
 

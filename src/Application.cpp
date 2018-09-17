@@ -76,9 +76,6 @@ Application::run()
 
     statistics_.start_date = pt::microsec_clock::universal_time();
     io_service_.run();
-    statistics_.total_duration = pt::microsec_clock::universal_time() -
-                                 statistics_.start_date;
-
     std::cout << statistics_ << std::endl;
 
     if (failure_)
@@ -206,6 +203,9 @@ Application::on_send(std::size_t bytes_transferred,
 void
 Application::on_send_complete()
 {
+    statistics_.send_duration = pt::microsec_clock::universal_time() -
+                                statistics_.start_date;
+
     std::cout << "Finished sending" << std::endl;
 }
 
