@@ -127,7 +127,6 @@ TcpApplication::finish_send()
 void
 TcpApplication::finish()
 {
-
     if (configuration_.shutdown_policy == Configuration::WAIT_FOR_PEER)
         socket_.shutdown_send();
 

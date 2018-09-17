@@ -38,6 +38,8 @@ class UdpSocket : public Socket
 {
 public:
     using socket_type = boost::asio::ip::udp::socket;
+    using protocol_type = socket_type::protocol_type;
+    using endpoint_type = socket_type::endpoint_type;
 
 public:
     explicit
@@ -71,6 +73,7 @@ private:
 
 private:
     socket_type socket_;
+    endpoint_type peer_endpoint_;
 };
 
 } // namespace tcp_tester

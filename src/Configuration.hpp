@@ -40,6 +40,7 @@ struct Configuration
     enum Mode { CLIENT, SERVER };
     enum Verify { NONE, FIRST, ALL };
     enum ShutdownPolicy { WAIT_FOR_PEER, SEND_COMPLETE, RECEIVE_COMPLETE };
+    enum Protocol { UDP, TCP };
 
     Mode mode;
     Verify verify;
@@ -51,6 +52,7 @@ struct Configuration
     Size size;
     boost::posix_time::time_duration duration_margin;
     ShutdownPolicy shutdown_policy;
+    Protocol protocol;
 };
 
 std::istream &
@@ -70,6 +72,12 @@ operator>>(std::istream & in, Configuration::ShutdownPolicy & policy);
 
 std::ostream &
 operator<<(std::ostream & out, const Configuration::ShutdownPolicy & policy);
+
+std::istream &
+operator>>(std::istream & in, Configuration::Protocol & protocol);
+
+std::ostream &
+operator<<(std::ostream & out, const Configuration::Protocol & protocol);
 
 } // namespace tcp_tester
 } // namespace enyx

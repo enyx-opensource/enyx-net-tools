@@ -171,6 +171,45 @@ operator<<(std::ostream & out, const Configuration::ShutdownPolicy & policy)
     }
 }
 
+std::istream &
+operator>>(std::istream & in, Configuration::Protocol & protocol)
+{
+    std::istream::sentry sentry(in);
+
+    if (sentry)
+    {
+        std::string s;
+        in >> s;
+
+        if (s == "tcp")
+            protocol = Configuration::TCP;
+        else if (s == "udp")
+            protocol = Configuration::UDP;
+        else
+            throw std::runtime_error("Unexpected protocol");
+    }
+
+    return in;
+}
+
+std::ostream &
+operator<<(std::ostream & out, const Configuration::Protocol & protocol)
+{
+    std::ostream::sentry sentry(out);
+
+    if (! sentry)
+        return out;
+
+    switch (protocol)
+    {
+    default:
+    case Configuration::TCP:
+        return out << "tcp";
+    case Configuration::UDP:
+        return out << "udp";
+    }
+}
+
 } // namespace tcp_tester
 } // namespace enyx
 

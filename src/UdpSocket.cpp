@@ -24,16 +24,54 @@
 
 #include "UdpSocket.hpp"
 
+#include <iostream>
+
+#include <boost/asio/deadline_timer.hpp>
+#include <boost/asio/strand.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 namespace enyx {
 namespace tcp_tester {
 
 namespace ao = boost::asio;
+namespace pt = boost::posix_time;
 
 UdpSocket::UdpSocket(boost::asio::io_service & io_service,
                      const Configuration & configuration)
     : Socket(io_service),
-      socket_(io_service_)
+      socket_(io_service_),
+      peer_endpoint_()
 {
+    switch (configuration.mode)
+    {
+        default:
+        case Configuration::SERVER:
+            throw std::runtime_error{"Udp supports client mode only"};
+        case Configuration::CLIENT:
+            connect(configuration);
+            break;
+    }
+}
+
+void
+UdpSocket::connect(const Configuration & configuration)
+{
+    const auto e = resolve<protocol_type>(configuration.endpoint);
+
+    socket_.open(e.protocol());
+
+    setup_windows(configuration, socket_);
+
+    ao::socket_base::reuse_address reuse_address(true);
+    socket_.set_option(reuse_address);
+
+    socket_.bind(endpoint_type{e.protocol(), e.port()});
+
+    // Set the default destination address of this datagram socket.
+    socket_.connect(e);
+
+    std::cout << "Connected to '" << socket_.remote_endpoint() << "' from '"
+              << socket_.local_endpoint() << "'" << std::endl;
 }
 
 void

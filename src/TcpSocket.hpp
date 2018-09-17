@@ -38,6 +38,7 @@ class TcpSocket : public Socket
 {
 public:
     using socket_type = boost::asio::ip::tcp::socket;
+    using protocol_type = socket_type::protocol_type;
 
 public:
     explicit

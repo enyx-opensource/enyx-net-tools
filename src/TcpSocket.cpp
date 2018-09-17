@@ -26,10 +26,7 @@
 
 #include <iostream>
 
-#include <boost/lexical_cast.hpp>
-#include <boost/regex.hpp>
 #include <boost/asio/deadline_timer.hpp>
-
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace enyx {
@@ -58,25 +55,25 @@ TcpSocket::TcpSocket(boost::asio::io_service & io_service,
 void
 TcpSocket::connect(const Configuration & configuration)
 {
-    const auto e(resolve<ao::ip::tcp>(configuration.endpoint));
+    const auto e(resolve<protocol_type>(configuration.endpoint));
 
     socket_.open(e.protocol());
     setup_windows(configuration, socket_);
 
     socket_.connect(e);
 
-    std::cout << "Connected to '" << e << "'" << std::endl;
+    std::cout << "Connected to '" << e << "' from '"
+              << socket_.local_endpoint() << "'" << std::endl;
 }
 
 void
 TcpSocket::listen(const Configuration & configuration,
                const boost::posix_time::time_duration & timeout)
 {
-    const ao::ip::tcp::endpoint e(resolve<ao::ip::tcp>(configuration.endpoint));
+    const ao::ip::tcp::endpoint e(resolve<protocol_type>(configuration.endpoint));
 
-    boost::asio::io_service io_service;
     // Schedule an asynchronous accept.
-    ao::ip::tcp::acceptor a(io_service, e.protocol());
+    ao::ip::tcp::acceptor a(socket_.get_io_service(), e.protocol());
     ao::socket_base::reuse_address reuse_address(true);
     a.set_option(reuse_address);
     setup_windows(configuration, a);
@@ -87,12 +84,14 @@ TcpSocket::listen(const Configuration & configuration,
               << " for client to connect" << std::endl;
 
     boost::system::error_code failure;
+    // Asynchronously Wait for a client to connect.
     a.async_accept(socket_, [&failure](const boost::system::error_code & f) {
-        failure = f;
+        if (f != boost::asio::error::operation_aborted)
+            failure = f;
     });
 
-    // And an asynchronous wait.
-    ao::deadline_timer t(io_service, timeout);
+    // Asynchronously wait for a timer to expire.
+    ao::deadline_timer t(socket_.get_io_service(), timeout);
     t.async_wait([&failure](const boost::system::error_code & f) {
         failure = boost::asio::error::timed_out;
     });
@@ -100,17 +99,20 @@ TcpSocket::listen(const Configuration & configuration,
     // Wait for any to complete.
     // If the timer completed, the failure variable
     // will be set to timed_out.
-    io_service.run_one();
+    socket_.get_io_service().run_one();
 
     if (failure)
         throw boost::system::system_error(failure);
+
+    std::cout << "Connected to '" << socket_.remote_endpoint() << "' from '"
+              << socket_.local_endpoint() << "'" << std::endl;
 }
 
 void
 TcpSocket::shutdown_send()
 {
     boost::system::error_code failure;
-    socket_.shutdown(ao::ip::tcp::socket::shutdown_send, failure);
+    socket_.shutdown(socket_type::shutdown_send, failure);
 }
 
 void

@@ -63,6 +63,11 @@ parse_command_line(int argc, char** argv)
 
     po::options_description optional("Optional arguments");
     optional.add_options()
+        ("protocol,p",
+            po::value<Configuration::Protocol>(&c.protocol)
+                ->default_value(Configuration::TCP),
+            "Protocol used to transfer data. Accepted values:\n"
+            "  - tcp\n  - udp\n")
         ("tx-bandwidth,t",
             po::value<Size>(&c.send_bandwidth)
                 ->default_value(DEFAULT_BANDWIDTH),
@@ -140,7 +145,11 @@ run(int argc, char** argv)
 {
     std::cout << "Starting.." << std::endl;
 
-    TcpApplication(parse_command_line(argc, argv)).run();
+    auto const configuration = parse_command_line(argc, argv);
+    if (configuration.protocol == Configuration::TCP)
+        TcpApplication(configuration).run();
+    else
+        UdpApplication(configuration).run();
 }
 
 }
