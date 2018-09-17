@@ -142,7 +142,9 @@ Application::on_receive_complete()
                                    statistics_.start_date;
 
     std::cout << "Finished receiving" << std::endl;
-    on_finish();
+
+    if (configuration_.direction != Configuration::TX)
+        on_finish();
 }
 
 void
@@ -208,6 +210,9 @@ Application::on_send_complete()
                                 statistics_.start_date;
 
     std::cout << "Finished sending" << std::endl;
+
+    if (configuration_.direction == Configuration::TX)
+        on_finish();
 }
 
 void
