@@ -64,7 +64,9 @@ Application::run()
 {
     statistics_.start_date = pt::microsec_clock::universal_time();
 
-    if (configuration_.direction != Configuration::TX)
+    if (configuration_.direction == Configuration::TX)
+        finish_receive();
+    else
         async_receive();
 
     if (configuration_.direction == Configuration::RX)
