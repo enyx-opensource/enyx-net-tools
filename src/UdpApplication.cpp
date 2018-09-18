@@ -69,6 +69,7 @@ UdpApplication::async_receive(std::size_t slice_remaining_size)
 void
 UdpApplication::finish_receive()
 {
+    Application::finish_receive();
     on_receive_complete();
 }
 
@@ -100,6 +101,7 @@ UdpApplication::async_send(std::size_t slice_remaining_size)
 void
 UdpApplication::finish_send()
 {
+    Application::finish_send();
     on_send_complete();
 }
 

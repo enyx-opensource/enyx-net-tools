@@ -67,7 +67,7 @@ protected:
                std::size_t slice_remaining_size);
 
     virtual void
-    finish_receive() = 0;
+    finish_receive();
 
     void
     on_receive_complete();
@@ -81,7 +81,7 @@ protected:
             std::size_t slice_remaining_size);
 
     virtual void
-    finish_send() = 0;
+    finish_send();
 
     void
     on_send_complete();

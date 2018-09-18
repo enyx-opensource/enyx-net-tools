@@ -67,6 +67,8 @@ TcpApplication::async_receive(std::size_t slice_remaining_size)
 void
 TcpApplication::finish_receive()
 {
+    Application::finish_receive();
+
     if (configuration_.shutdown_policy == Configuration::RECEIVE_COMPLETE)
         socket_.shutdown_send();
 
@@ -118,6 +120,8 @@ TcpApplication::async_send(std::size_t slice_remaining_size)
 void
 TcpApplication::finish_send()
 {
+    Application::finish_send();
+
     if (configuration_.shutdown_policy == Configuration::SEND_COMPLETE)
         socket_.shutdown_send();
 

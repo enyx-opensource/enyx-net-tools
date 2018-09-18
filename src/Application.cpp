@@ -138,11 +138,16 @@ Application::on_receive(std::size_t bytes_transferred,
 }
 
 void
-Application::on_receive_complete()
+Application::finish_receive()
 {
+
     statistics_.receive_duration = pt::microsec_clock::universal_time() -
                                    statistics_.start_date;
+}
 
+void
+Application::on_receive_complete()
+{
     std::cout << "Finished receiving" << std::endl;
 
     if (configuration_.direction != Configuration::TX)
@@ -206,11 +211,15 @@ Application::on_send(std::size_t bytes_transferred,
 }
 
 void
-Application::on_send_complete()
+Application::finish_send()
 {
     statistics_.send_duration = pt::microsec_clock::universal_time() -
                                 statistics_.start_date;
+}
 
+void
+Application::on_send_complete()
+{
     std::cout << "Finished sending" << std::endl;
 
     if (configuration_.direction == Configuration::TX)
