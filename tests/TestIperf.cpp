@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <iostream>
 
 #include <boost/test/unit_test.hpp>
 #include <boost/process.hpp>
@@ -58,11 +59,13 @@ struct TcpFixture
 
         iperf_ = p::child{iperf_client_cmd.str(),
                           p::std_in < p::null,
-                          p::std_out > p::null,
+                          p::std_out > iperf_server_stdout_,
                           p::std_err > stderr,
                           io_service_};
 
         BOOST_TEST_CHECKPOINT("iperf client started");
+
+        async_read_iperf_output();
     }
 
     void
@@ -91,6 +94,8 @@ struct TcpFixture
         peer_acceptor_.listen();
         peer_acceptor_.async_accept(peer_socket_,
                                     boost::bind(&TcpFixture::on_peer_connect, this, _1));
+
+        std::cout << "tester: Waiting for iperf to connect" << std::endl;
     }
 
     void
@@ -104,6 +109,10 @@ struct TcpFixture
                 std::istream is(&iperf_buffer_);
                 std::getline(is, line);
             }
+
+            if (! line.empty())
+                std::cout << "nx-iperf: " << line << std::endl;
+
             if (line.find("Waiting") == 0 && ! peer_socket_.is_open())
                 peer_socket_.async_connect(endpoint_,
                                            boost::bind(&TcpFixture::on_peer_connect, this, _1));
@@ -117,6 +126,8 @@ struct TcpFixture
     {
         BOOST_REQUIRE(! failure);
         async_read_peer();
+
+        std::cout << "tester: Connected to nx-iperf" << std::endl;
     }
 
     void
