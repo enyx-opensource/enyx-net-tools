@@ -16,6 +16,8 @@ static constexpr std::size_t PAYLOAD_SIZE = 1024 * 1024;
 
 struct TcpFixture
 {
+    enum Direction { TO_NXIPERF, FROM_NXIPERF, BOTH };
+
     TcpFixture()
         : io_service_(),
           peer_socket_(io_service_),
@@ -26,14 +28,17 @@ struct TcpFixture
                     1234),
           iperf_buffer_(),
           peer_buffer_(1024 * 1024),
-          requested_size_()
+          requested_size_(),
+          direction_()
     { }
 
     void
     start_iperf_server(std::size_t requested_size,
-                       const std::string & args = std::string{})
+                       const std::string & args = std::string{},
+                       Direction direction = BOTH)
     {
         requested_size_ = requested_size;
+        direction_ = direction;
 
         std::ostringstream iperf_server_cmd;
         iperf_server_cmd << IPERF_BINARY_PATH
@@ -56,9 +61,11 @@ struct TcpFixture
 
     void
     start_iperf_client(std::size_t requested_size,
-                       const std::string & args = std::string{})
+                       const std::string & args = std::string{},
+                       Direction direction = BOTH)
     {
         requested_size_ = requested_size;
+        direction_ = direction;
 
         std::ostringstream iperf_client_cmd;
         iperf_client_cmd << IPERF_BINARY_PATH
@@ -136,27 +143,32 @@ struct TcpFixture
     on_peer_connect(const boost::system::error_code & failure)
     {
         BOOST_REQUIRE(! failure);
-        async_read_peer();
+        if (direction_ == FROM_NXIPERF)
+        {
+            peer_socket_.shutdown(peer_socket_.shutdown_send);
+            async_read_rx_peer();
+        }
+        else if (direction_ == TO_NXIPERF)
+            async_write_tx_peer();
+        else
+            async_read_rxtx_peer();
 
         std::cout << "tester: Connected to nx-iperf" << std::endl;
     }
 
     void
-    async_read_peer()
+    async_read_rxtx_peer()
     {
         boost::asio::async_read(peer_socket_,
                                 boost::asio::buffer(peer_buffer_),
                                 boost::asio::transfer_all(),
-                                boost::bind(&TcpFixture::on_peer_receive, this, _1, _2));
+                                boost::bind(&TcpFixture::on_peer_rxtx_receive, this, _1, _2));
     }
 
     void
-    on_peer_receive(const boost::system::error_code & failure,
-                    std::size_t bytes_received)
+    on_peer_rxtx_receive(const boost::system::error_code & failure,
+                         std::size_t bytes_received)
     {
-        BOOST_REQUIRE_LE(bytes_received, requested_size_);
-        requested_size_ -= bytes_received;
-
         if (failure)
         {
             BOOST_REQUIRE_EQUAL(boost::asio::error::eof, failure);
@@ -167,16 +179,86 @@ struct TcpFixture
             boost::asio::async_write(peer_socket_,
                                      boost::asio::buffer(peer_buffer_, bytes_received),
                                      boost::asio::transfer_all(),
-                                     boost::bind(&TcpFixture::on_peer_sent, this, _1, _2));
+                                     boost::bind(&TcpFixture::on_peer_rxtx_sent, this, _1, _2));
     }
 
     void
-    on_peer_sent(const boost::system::error_code & failure,
-                 std::size_t bytes_received)
+    on_peer_rxtx_sent(const boost::system::error_code & failure,
+                      std::size_t bytes_sent)
     {
         BOOST_REQUIRE(! failure);
 
-        async_read_peer();
+        BOOST_REQUIRE_LE(bytes_sent, requested_size_);
+        requested_size_ -= bytes_sent;
+
+        async_read_rxtx_peer();
+    }
+
+    void
+    async_read_rx_peer()
+    {
+        boost::asio::async_read(peer_socket_,
+                                boost::asio::buffer(peer_buffer_),
+                                boost::asio::transfer_all(),
+                                boost::bind(&TcpFixture::on_peer_rx_receive, this, _1, _2));
+    }
+
+    void
+    on_peer_rx_receive(const boost::system::error_code & failure,
+                       std::size_t bytes_received)
+    {
+        if (failure)
+        {
+            BOOST_REQUIRE_EQUAL(boost::asio::error::eof, failure);
+            peer_socket_.close();
+        }
+        else
+        {
+            BOOST_REQUIRE_LE(bytes_received, requested_size_);
+            requested_size_ -= bytes_received;
+
+            async_read_rx_peer();
+        }
+    }
+
+    void
+    async_write_tx_peer()
+    {
+        const std::size_t size = std::min(peer_buffer_.size(), requested_size_);
+
+        boost::asio::async_write(peer_socket_,
+                                 boost::asio::buffer(peer_buffer_, size),
+                                 boost::asio::transfer_all(),
+                                 boost::bind(&TcpFixture::on_peer_tx_sent, this, _1, _2));
+    }
+
+    void
+    on_peer_tx_sent(const boost::system::error_code & failure,
+                    std::size_t bytes_sent)
+    {
+        BOOST_REQUIRE(! failure);
+
+        BOOST_REQUIRE_LE(bytes_sent, requested_size_);
+        requested_size_ -= bytes_sent;
+
+        if (requested_size_)
+            async_write_tx_peer();
+        else
+        {
+            peer_socket_.shutdown(peer_socket_.shutdown_send);
+            boost::asio::async_read(peer_socket_,
+                                    boost::asio::buffer(peer_buffer_),
+                                    boost::asio::transfer_all(),
+                                    boost::bind(&TcpFixture::on_peer_tx_receive, this, _1, _2));
+        }
+    }
+
+    void
+    on_peer_tx_receive(const boost::system::error_code & failure,
+                       std::size_t bytes_sent)
+    {
+        BOOST_REQUIRE_EQUAL(boost::asio::error::eof, failure);
+        peer_socket_.close();
     }
 
     boost::asio::io_service io_service_;
@@ -188,6 +270,7 @@ struct TcpFixture
     boost::asio::streambuf iperf_buffer_;
     std::vector<std::uint8_t> peer_buffer_;
     std::size_t requested_size_;
+    Direction direction_;
 };
 
 BOOST_FIXTURE_TEST_SUITE(ServerTcp, TcpFixture)
@@ -231,6 +314,28 @@ BOOST_AUTO_TEST_CASE(VerifyFirst)
 BOOST_AUTO_TEST_CASE(VerifyAll)
 {
     start_iperf_server(PAYLOAD_SIZE, "--verify=all");
+
+    io_service_.run();
+
+    wait_for_iperf();
+}
+
+BOOST_AUTO_TEST_CASE(RxOnly)
+{
+    start_iperf_server(PAYLOAD_SIZE,
+                       "--mode=rx --shutdown-policy=receive_complete",
+                       TO_NXIPERF);
+
+    io_service_.run();
+
+    wait_for_iperf();
+}
+
+BOOST_AUTO_TEST_CASE(TxOnly)
+{
+    start_iperf_server(PAYLOAD_SIZE,
+                       "--mode=tx --shutdown-policy=send_complete",
+                       FROM_NXIPERF);
 
     io_service_.run();
 

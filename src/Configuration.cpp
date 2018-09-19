@@ -129,7 +129,7 @@ operator<<(std::ostream & out, const Configuration::Direction & direction)
     {
     default:
     case Configuration::RX:
-        return out << "tx";
+        return out << "rx";
     case Configuration::TX:
         return out << "tx";
     case Configuration::BOTH:
