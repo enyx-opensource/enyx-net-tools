@@ -12,6 +12,8 @@
 namespace p = boost::process;
 namespace ip = boost::asio::ip;
 
+static constexpr std::size_t PAYLOAD_SIZE = 1024 * 1024;
+
 struct TcpFixture
 {
     TcpFixture()
@@ -23,17 +25,22 @@ struct TcpFixture
           endpoint_(ip::address::from_string("127.0.0.1"),
                     1234),
           iperf_buffer_(),
-          peer_buffer_(1024 * 1024)
+          peer_buffer_(1024 * 1024),
+          requested_size_()
     { }
 
     void
-    start_iperf_server(const std::string & args)
+    start_iperf_server(std::size_t requested_size,
+                       const std::string & args = std::string{})
     {
+        requested_size_ = requested_size;
+
         std::ostringstream iperf_server_cmd;
         iperf_server_cmd << IPERF_BINARY_PATH
                          << " --listen=" << endpoint_.address()
                                          << ":"
                                          << endpoint_.port()
+                         << " --size=" << requested_size_ << "B"
                          << " " << args;
 
         iperf_ = p::child{iperf_server_cmd.str(),
@@ -48,13 +55,17 @@ struct TcpFixture
     }
 
     void
-    start_iperf_client(const std::string & args)
+    start_iperf_client(std::size_t requested_size,
+                       const std::string & args = std::string{})
     {
+        requested_size_ = requested_size;
+
         std::ostringstream iperf_client_cmd;
         iperf_client_cmd << IPERF_BINARY_PATH
                          << " --connect=" << endpoint_.address()
                                          << ":"
                                          << endpoint_.port()
+                         << " --size=" << requested_size_ << "B"
                          << " " << args;
 
         iperf_ = p::child{iperf_client_cmd.str(),
@@ -66,22 +77,6 @@ struct TcpFixture
         BOOST_TEST_CHECKPOINT("iperf client started");
 
         async_read_iperf_output();
-    }
-
-    void
-    wait_for_iperf()
-    {
-        iperf_.wait();
-        BOOST_REQUIRE_EQUAL(0, iperf_.exit_code());
-    }
-
-    void
-    async_read_iperf_output()
-    {
-        boost::asio::async_read_until(iperf_server_stdout_,
-                                      iperf_buffer_,
-                                      '\n',
-                                      boost::bind(&TcpFixture::on_iperf_receive, this, _1, _2));
     }
 
     void
@@ -99,8 +94,24 @@ struct TcpFixture
     }
 
     void
-    on_iperf_receive(const boost::system::error_code & failure,
-                     std::size_t bytes_received)
+    wait_for_iperf()
+    {
+        iperf_.wait();
+        BOOST_REQUIRE_EQUAL(0, iperf_.exit_code());
+    }
+
+    void
+    async_read_iperf_output()
+    {
+        boost::asio::async_read_until(iperf_server_stdout_,
+                                      iperf_buffer_,
+                                      '\n',
+                                      boost::bind(&TcpFixture::on_iperf_output_receive, this, _1, _2));
+    }
+
+    void
+    on_iperf_output_receive(const boost::system::error_code & failure,
+                            std::size_t bytes_received)
     {
         if (! failure)
         {
@@ -143,6 +154,9 @@ struct TcpFixture
     on_peer_receive(const boost::system::error_code & failure,
                     std::size_t bytes_received)
     {
+        BOOST_REQUIRE_LE(bytes_received, requested_size_);
+        requested_size_ -= bytes_received;
+
         if (failure)
         {
             BOOST_REQUIRE_EQUAL(boost::asio::error::eof, failure);
@@ -173,13 +187,14 @@ struct TcpFixture
     ip::tcp::endpoint endpoint_;
     boost::asio::streambuf iperf_buffer_;
     std::vector<std::uint8_t> peer_buffer_;
+    std::size_t requested_size_;
 };
 
 BOOST_FIXTURE_TEST_SUITE(ServerTcp, TcpFixture)
 
 BOOST_AUTO_TEST_CASE(ShutdownSendComplete)
 {
-    start_iperf_server("--size=1MiB --shutdown-policy=send_complete");
+    start_iperf_server(PAYLOAD_SIZE, "--shutdown-policy=send_complete");
 
     io_service_.run();
 
@@ -188,7 +203,7 @@ BOOST_AUTO_TEST_CASE(ShutdownSendComplete)
 
 BOOST_AUTO_TEST_CASE(ShutdownReceiveComplete)
 {
-    start_iperf_server("--size=1MiB --shutdown-policy=receive_complete");
+    start_iperf_server(PAYLOAD_SIZE, "--shutdown-policy=receive_complete");
 
     io_service_.run();
 
@@ -197,7 +212,7 @@ BOOST_AUTO_TEST_CASE(ShutdownReceiveComplete)
 
 BOOST_AUTO_TEST_CASE(VerifyNone)
 {
-    start_iperf_server("--size=1MiB --verify=none");
+    start_iperf_server(PAYLOAD_SIZE, "--verify=none");
 
     io_service_.run();
 
@@ -206,7 +221,7 @@ BOOST_AUTO_TEST_CASE(VerifyNone)
 
 BOOST_AUTO_TEST_CASE(VerifyFirst)
 {
-    start_iperf_server("--size=1MiB --verify=first");
+    start_iperf_server(PAYLOAD_SIZE, "--verify=first");
 
     io_service_.run();
 
@@ -215,7 +230,7 @@ BOOST_AUTO_TEST_CASE(VerifyFirst)
 
 BOOST_AUTO_TEST_CASE(VerifyAll)
 {
-    start_iperf_server("--size=1MiB --verify=all");
+    start_iperf_server(PAYLOAD_SIZE, "--verify=all");
 
     io_service_.run();
 
@@ -229,7 +244,7 @@ BOOST_FIXTURE_TEST_SUITE(ClientTcp, TcpFixture)
 BOOST_AUTO_TEST_CASE(ShutdownSendComplete)
 {
     start_peer_server();
-    start_iperf_client("--size=1MiB");
+    start_iperf_client(PAYLOAD_SIZE);
 
     io_service_.run();
 

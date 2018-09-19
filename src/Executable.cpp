@@ -42,7 +42,7 @@ namespace pt = boost::posix_time;
 
 namespace {
 
-constexpr Size DEFAULT_BANDWIDTH = Size(128 * 1024 * 1024);
+constexpr Size DEFAULT_BANDWIDTH = Size(128 * 1000 * 1000, Size::SI);
 
 Configuration
 parse_command_line(int argc, char** argv)

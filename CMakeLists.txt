@@ -5,6 +5,7 @@ project(enyx-net-tools CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "-Wall ${CMAKE_CXX_FLAGS}")
 
 find_package(Threads REQUIRED)

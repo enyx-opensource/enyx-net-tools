@@ -37,19 +37,28 @@ namespace tcp_tester {
 
 namespace {
 
-uint64_t
+Size
 parse_size(const std::string & s)
 {
-    boost::regex r("(\\d+)\\s*([KMGTPE]i)?(B|bit)");
+    boost::regex regex_si(R"((\d+)\s*([kKMGTPE])?(B|b|bit))");
+    boost::regex regex_iec(R"((\d+)\s*([KMGTPE]i)?(B|bit))");
     boost::smatch m;
 
-    if (! boost::regex_match(s, m, r))
+    Size::UnitSystem unit_system;
+    if (boost::regex_match(s, m, regex_si))
+        unit_system = Size::SI;
+    else if (boost::regex_match(s, m, regex_iec))
+        unit_system = Size::IEC;
+    else
     {
         std::ostringstream error;
         error << "size '" << s
-              << "' doesn't match \\d+\\s*([KMGTPE]i)?(B|bit)";
+              << "' doesn't match either \\d+\\s*([KMGTPE]i)?(B|bit)"
+                 " nor \\d+\\s*([kKMGTPE])?(B|b|bit)";
         throw std::runtime_error(error.str());
     }
+
+    const uint64_t factor = unit_system == Size::SI ? 1000 : 1024;
 
     uint64_t size = std::atoll(m.str(1).c_str());
 
@@ -57,24 +66,36 @@ parse_size(const std::string & s)
         switch (m.str(2)[0])
         {
             case 'E':
-                size *= 1024;
+                size *= factor;
             case 'P':
-                size *= 1024;
+                size *= factor;
             case 'T':
-                size *= 1024;
+                size *= factor;
             case 'G':
-                size *= 1024;
+                size *= factor;
             case 'M':
-                size *= 1024;
+                size *= factor;
             case 'K':
-                size *= 1024;
+            case 'k':
+                size *= factor;
         }
 
-    if (m.str(3) == "bit")
+    if (m.str(3) == "bit" || m.str(3) == "b")
         size /= 8;
 
-    return size;
+    return Size{size, unit_system};
 }
+
+const char * units_iec[] = { "bit", "Kibit", "Mibit",
+                             "Gibit", "Tibit", "Pibit",
+                             "Eibit" };
+
+const char * units_si[] = { "bit", "kbit", "Mbit",
+                            "Gbit", "Tbit", "Pbit",
+                            "Ebit" };
+
+#define UNITS_COUNT ((sizeof(units_iec)) / sizeof(units_iec[0]))
+
 
 } // anonymous namespace
 
@@ -88,20 +109,12 @@ operator>>(std::istream & in, Size & size)
         std::string s;
         in >> s;
 
-        static_cast<uint64_t &>(size) = parse_size(s);
+        size = parse_size(s);
     }
 
     return in;
 }
 
-const char * units[] = { "bit",
-                         "Kibit",
-                         "Mibit",
-                         "Gibit",
-                         "Tibit",
-                         "Pibit",
-                         "Eibit" };
-#define UNITS_COUNT ((sizeof(units)) / sizeof(units[0]))
 
 std::ostream &
 operator<<(std::ostream & out, const Size & size)
@@ -109,10 +122,14 @@ operator<<(std::ostream & out, const Size & size)
     std::ostream::sentry sentry(out);
     if (sentry)
     {
+        const Size::UnitSystem unit_system = size.get_unit_system();
+        const uint64_t factor = unit_system == Size::SI ? 1000 : 1024;
+        const char ** units = unit_system == Size::SI ? units_si : units_iec;
+
         long double value = size * 8;
         uint64_t i;
-        for (i = 0; i != UNITS_COUNT - 1 && value / 1024. >= 1.; ++i)
-            value /= 1024.;
+        for (i = 0; i != UNITS_COUNT - 1 && value / factor >= 1.; ++i)
+            value /= factor;
 
         boost::io::ios_flags_saver s(out);
         out << std::fixed << std::setprecision(1) << value << units[i];

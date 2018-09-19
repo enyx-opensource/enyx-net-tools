@@ -33,9 +33,14 @@ namespace tcp_tester {
 class Size
 {
 public:
+    enum UnitSystem { SI, IEC };
+
+public:
     constexpr
-    Size(uint64_t value = 0ULL)
-        : value_(value)
+    Size(uint64_t value = 0ULL,
+         UnitSystem unit_system = IEC)
+        : value_(value),
+          unit_system_(unit_system)
     { }
 
     operator const uint64_t &() const
@@ -44,8 +49,13 @@ public:
     operator uint64_t &()
     { return value_; }
 
+    UnitSystem
+    get_unit_system() const
+    { return unit_system_; }
+
 private:
     uint64_t value_;
+    UnitSystem unit_system_;
 };
 
 std::istream &
