@@ -71,11 +71,11 @@ parse_command_line(int argc, char** argv)
         ("tx-bandwidth,t",
             po::value<Size>(&c.send_bandwidth)
                 ->default_value(DEFAULT_BANDWIDTH),
-            "Limit send bandwidth (e.g. 8KiB, 16MiB, 1Gibit, 1GiB)\n")
+            "Limit send bandwidth (e.g. 8kB, 16MB, 1Gbit, 1GB)\n")
         ("rx-bandwidth,r",
             po::value<Size>(&c.receive_bandwidth)
                 ->default_value(DEFAULT_BANDWIDTH),
-            "Limit receive bandwidth (e.g. 8KiB, 16MiB, 1Gibit, 1GiB)\n")
+            "Limit receive bandwidth (e.g. 8kB, 16MB, 1Gbit, 1GB)\n")
         ("bandwidth-sampling-frequency,f",
             po::value<uint64_t>(&c.bandwidth_sampling_frequency)
                 ->default_value(10),
