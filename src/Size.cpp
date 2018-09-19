@@ -40,15 +40,15 @@ namespace {
 Size
 parse_size(const std::string & s)
 {
-    boost::regex regex_si(R"((\d+)\s*([kKMGTPE])?(B|b|bit))");
     boost::regex regex_iec(R"((\d+)\s*([KMGTPE]i)?(B|bit))");
+    boost::regex regex_si(R"((\d+)\s*([kKMGTPE])?(B|b|bit))");
     boost::smatch m;
 
     Size::UnitSystem unit_system;
-    if (boost::regex_match(s, m, regex_si))
-        unit_system = Size::SI;
-    else if (boost::regex_match(s, m, regex_iec))
+    if (boost::regex_match(s, m, regex_iec))
         unit_system = Size::IEC;
+    else if (boost::regex_match(s, m, regex_si))
+        unit_system = Size::SI;
     else
     {
         std::ostringstream error;

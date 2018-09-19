@@ -69,15 +69,10 @@ Socket::resolve(const std::string & s)
     }
 
     typename Protocol::resolver::query local{"0"};
-    switch (m.size())
-    {
-        case 4:
-            local = typename Protocol::resolver::query{m.str(1), m.str(2)};
-        case 3:
-            local = typename Protocol::resolver::query{m.str(2)};
-        default:
-            break;
-    }
+    if (m[1].matched)
+        local = typename Protocol::resolver::query{m.str(1), m.str(2)};
+    else if (m[2].matched)
+        local = typename Protocol::resolver::query{m.str(2)};
 
     typename Protocol::resolver::query remote{m.str(3), m.str(4)};
 

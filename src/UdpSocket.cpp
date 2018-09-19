@@ -70,8 +70,8 @@ UdpSocket::connect(const Configuration & configuration)
     // Set the default destination address of this datagram socket.
     socket_.connect(e.second);
 
-    std::cout << "Connected to '" << socket_.remote_endpoint() << "' from '"
-              << socket_.local_endpoint() << "'" << std::endl;
+    std::cout << "Local '" << socket_.local_endpoint() << "' to remote '"
+              << socket_.remote_endpoint() << "'" << std::endl;
 }
 
 void

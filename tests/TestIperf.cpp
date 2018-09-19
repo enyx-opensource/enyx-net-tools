@@ -24,8 +24,7 @@ struct TcpFixture
           peer_acceptor_(io_service_),
           iperf_server_stdout_(io_service_),
           iperf_(),
-          endpoint_(ip::address::from_string("127.0.0.1"),
-                    1234),
+          endpoint_(ip::address::from_string("127.0.0.1"), 1234),
           iperf_buffer_(),
           peer_buffer_(1024 * 1024),
           requested_size_(),
@@ -61,11 +60,9 @@ struct TcpFixture
 
     void
     start_iperf_client(std::size_t requested_size,
-                       const std::string & args = std::string{},
-                       Direction direction = BOTH)
+                       const std::string & args = std::string{})
     {
         requested_size_ = requested_size;
-        direction_ = direction;
 
         std::ostringstream iperf_client_cmd;
         iperf_client_cmd << IPERF_BINARY_PATH
@@ -86,8 +83,10 @@ struct TcpFixture
     }
 
     void
-    start_peer_server()
+    start_peer_server(Direction direction = BOTH)
     {
+        direction_ = direction;
+
         peer_acceptor_.open(endpoint_.protocol());
         ip::tcp::acceptor::reuse_address reuse_address{true};
         peer_acceptor_.set_option(reuse_address);
@@ -96,7 +95,7 @@ struct TcpFixture
         peer_acceptor_.async_accept(peer_socket_,
                                     boost::bind(&TcpFixture::on_peer_connect, this, _1));
 
-        std::cout << "tester: Waiting for iperf to connect" << std::endl;
+        std::cout << "Waiting for iperf to connect" << std::endl;
     }
 
     void
@@ -152,7 +151,7 @@ struct TcpFixture
         else
             async_read_rxtx_peer();
 
-        std::cout << "tester: Connected to nx-iperf" << std::endl;
+        std::cout << "Connected to nx-iperf" << std::endl;
     }
 
     void
@@ -357,3 +356,200 @@ BOOST_AUTO_TEST_CASE(ShutdownSendComplete)
 
 BOOST_AUTO_TEST_SUITE_END()
 
+struct UdpFixture
+{
+    enum Direction { TO_NXIPERF, FROM_NXIPERF, BOTH };
+
+    UdpFixture()
+        : io_service_(),
+          peer_socket_(io_service_),
+          iperf_server_stdout_(io_service_),
+          iperf_(),
+          remote_endpoint_(ip::address::from_string("127.0.0.1"), 1235),
+          local_endpoint_(ip::address::from_string("127.0.0.1"), 1234),
+          iperf_buffer_(),
+          peer_buffer_(65535),
+          requested_size_(),
+          direction_()
+    { }
+
+    void
+    start_iperf_client(std::size_t requested_size,
+                       const std::string & args = std::string{})
+    {
+        requested_size_ = requested_size;
+
+        std::ostringstream iperf_client_cmd;
+        iperf_client_cmd << IPERF_BINARY_PATH
+                         << " --connect="
+                         << local_endpoint_.address() << ":"
+                         << local_endpoint_.port() << ":"
+                         << remote_endpoint_.address() << ":"
+                         << remote_endpoint_.port()
+                         << " --size=" << requested_size_ << "B"
+                         << " " << args;
+
+        iperf_ = p::child{iperf_client_cmd.str(),
+                          p::std_in < p::null,
+                          p::std_out > iperf_server_stdout_,
+                          p::std_err > stderr,
+                          io_service_};
+
+        BOOST_TEST_CHECKPOINT("iperf client started");
+
+        async_read_iperf_output();
+    }
+
+    void
+    start_peer_server(Direction direction = BOTH)
+    {
+        direction_ = direction;
+
+        peer_socket_.open(local_endpoint_.protocol());
+        ip::udp::socket::reuse_address reuse_address{true};
+        peer_socket_.set_option(reuse_address);
+        peer_socket_.bind(local_endpoint_);
+        peer_socket_.connect(remote_endpoint_);
+
+        if (direction_ == FROM_NXIPERF)
+            async_read_rx_peer();
+        else if (direction_ == TO_NXIPERF)
+            async_write_tx_peer();
+        else
+            async_read_rxtx_peer();
+
+        std::cout << "Waiting for iperf to send data" << std::endl;
+    }
+
+    void
+    wait_for_iperf()
+    {
+        iperf_.wait();
+        BOOST_REQUIRE_EQUAL(0, iperf_.exit_code());
+    }
+
+    void
+    async_read_iperf_output()
+    {
+        boost::asio::async_read_until(iperf_server_stdout_,
+                                      iperf_buffer_,
+                                      '\n',
+                                      boost::bind(&UdpFixture::on_iperf_output_receive, this, _1, _2));
+    }
+
+    void
+    on_iperf_output_receive(const boost::system::error_code & failure,
+                            std::size_t bytes_received)
+    {
+        if (! failure)
+        {
+            std::string line;
+            {
+                std::istream is(&iperf_buffer_);
+                std::getline(is, line);
+            }
+
+            if (! line.empty())
+                std::cout << "nx-iperf: " << line << std::endl;
+
+            async_read_iperf_output();
+        }
+    }
+
+    void
+    async_read_rxtx_peer()
+    {
+        peer_socket_.async_receive(boost::asio::buffer(peer_buffer_),
+                                   boost::bind(&UdpFixture::on_peer_rxtx_receive, this, _1, _2));
+    }
+
+    void
+    on_peer_rxtx_receive(const boost::system::error_code & failure,
+                         std::size_t bytes_received)
+    {
+        BOOST_REQUIRE(! failure);
+
+        peer_socket_.async_send(boost::asio::buffer(peer_buffer_, bytes_received),
+                                boost::bind(&UdpFixture::on_peer_rxtx_sent, this, _1, _2));
+    }
+
+    void
+    on_peer_rxtx_sent(const boost::system::error_code & failure,
+                      std::size_t bytes_sent)
+    {
+        BOOST_REQUIRE(! failure);
+
+        BOOST_REQUIRE_LE(bytes_sent, requested_size_);
+        requested_size_ -= bytes_sent;
+
+        if (requested_size_)
+            async_read_rxtx_peer();
+    }
+
+    void
+    async_read_rx_peer()
+    {
+        peer_socket_.async_receive(boost::asio::buffer(peer_buffer_),
+                                   boost::bind(&UdpFixture::on_peer_rx_receive, this, _1, _2));
+    }
+
+    void
+    on_peer_rx_receive(const boost::system::error_code & failure,
+                       std::size_t bytes_received)
+    {
+        BOOST_REQUIRE(! failure);
+
+        BOOST_REQUIRE_LE(bytes_received, requested_size_);
+        requested_size_ -= bytes_received;
+
+        if (requested_size_)
+            async_read_rx_peer();
+    }
+
+    void
+    async_write_tx_peer()
+    {
+        const std::size_t size = std::min(peer_buffer_.size(), requested_size_);
+
+        peer_socket_.async_send(boost::asio::buffer(peer_buffer_, size),
+                                boost::bind(&UdpFixture::on_peer_tx_sent, this, _1, _2));
+    }
+
+    void
+    on_peer_tx_sent(const boost::system::error_code & failure,
+                    std::size_t bytes_sent)
+    {
+        BOOST_REQUIRE(! failure);
+
+        BOOST_REQUIRE_LE(bytes_sent, requested_size_);
+        requested_size_ -= bytes_sent;
+
+        if (requested_size_)
+            async_write_tx_peer();
+    }
+
+    boost::asio::io_service io_service_;
+    ip::udp::socket peer_socket_;
+    p::async_pipe iperf_server_stdout_;
+    p::child iperf_;
+    ip::udp::endpoint remote_endpoint_;
+    ip::udp::endpoint local_endpoint_;
+    boost::asio::streambuf iperf_buffer_;
+    std::vector<std::uint8_t> peer_buffer_;
+    std::size_t requested_size_;
+    Direction direction_;
+};
+
+BOOST_FIXTURE_TEST_SUITE(ClientUdp, UdpFixture)
+
+BOOST_AUTO_TEST_CASE(RxTx, * boost::unit_test::disabled())
+{
+    start_peer_server();
+    start_iperf_client(1024, "--protocol=udp");
+
+    io_service_.run();
+
+    wait_for_iperf();
+}
+
+BOOST_AUTO_TEST_SUITE_END()

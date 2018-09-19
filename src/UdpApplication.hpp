@@ -39,6 +39,9 @@ public:
     UdpApplication(const Configuration & configuration);
 
 private:
+    enum { MAX_DATAGRAM_SIZE = 1024 };
+
+private:
     virtual void
     async_receive(std::size_t slice_remaining_size = 0ULL) override;
 
