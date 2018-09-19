@@ -146,7 +146,7 @@ parse_command_line(int argc, char** argv)
     else if (args.count("listen"))
         c.mode = Configuration::SERVER;
     else
-        throw std::runtime_error("--connect or --listen are required");
+        throw std::runtime_error{"--connect or --listen are required"};
 
     return c;
 }

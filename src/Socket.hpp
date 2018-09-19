@@ -41,7 +41,7 @@ public:
 
 protected:
     template<typename Protocol>
-    typename Protocol::endpoint
+    std::pair<typename Protocol::endpoint, typename Protocol::endpoint>
     resolve(const std::string & endpoint);
 
     template<typename SocketType>
@@ -54,12 +54,12 @@ protected:
 };
 
 template<typename Protocol>
-typename Protocol::endpoint
+std::pair<typename Protocol::endpoint, typename Protocol::endpoint>
 Socket::resolve(const std::string & s)
 {
     boost::smatch m;
     {
-        boost::regex r("([^:]+):([^:]+)");
+        boost::regex r("(?:(?:([^:]+):)?([^:]+):)?([^:]+):([^:]+)");
         if (! boost::regex_match(s, m, r))
         {
             std::ostringstream error;
@@ -68,10 +68,21 @@ Socket::resolve(const std::string & s)
         }
     }
 
-    typename Protocol::resolver::query q(m.str(1), m.str(2));
+    typename Protocol::resolver::query local{"0"};
+    switch (m.size())
+    {
+        case 4:
+            local = typename Protocol::resolver::query{m.str(1), m.str(2)};
+        case 3:
+            local = typename Protocol::resolver::query{m.str(2)};
+        default:
+            break;
+    }
 
-    typename Protocol::resolver r(io_service_);
-    return *r.resolve(q);
+    typename Protocol::resolver::query remote{m.str(3), m.str(4)};
+
+    typename Protocol::resolver r{io_service_};
+    return std::make_pair(*r.resolve(local), *r.resolve(remote));
 }
 
 template<typename SocketType>

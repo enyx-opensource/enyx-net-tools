@@ -69,9 +69,8 @@ struct TcpFixture
 
         std::ostringstream iperf_client_cmd;
         iperf_client_cmd << IPERF_BINARY_PATH
-                         << " --connect=" << endpoint_.address()
-                                         << ":"
-                                         << endpoint_.port()
+                         << " --connect=127.0.0.1:0:"
+                         << endpoint_.address() << ":" << endpoint_.port()
                          << " --size=" << requested_size_ << "B"
                          << " " << args;
 

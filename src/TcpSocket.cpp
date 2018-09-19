@@ -55,14 +55,17 @@ TcpSocket::TcpSocket(boost::asio::io_service & io_service,
 void
 TcpSocket::connect(const Configuration & configuration)
 {
-    const auto e(resolve<protocol_type>(configuration.endpoint));
+    const auto e = resolve<protocol_type>(configuration.endpoint);
 
-    socket_.open(e.protocol());
+    socket_.open(e.first.protocol());
+    ao::socket_base::reuse_address reuse_address(true);
+    socket_.set_option(reuse_address);
+    socket_.bind(e.first);
     setup_windows(configuration, socket_);
 
-    socket_.connect(e);
+    socket_.connect(e.second);
 
-    std::cout << "Connected to '" << e << "' from '"
+    std::cout << "Connected to '" << socket_.remote_endpoint() << "' from '"
               << socket_.local_endpoint() << "'" << std::endl;
 }
 
@@ -70,15 +73,15 @@ void
 TcpSocket::listen(const Configuration & configuration,
                const boost::posix_time::time_duration & timeout)
 {
-    const ao::ip::tcp::endpoint e(resolve<protocol_type>(configuration.endpoint));
+    const auto e = resolve<protocol_type>(configuration.endpoint);
     auto & io_service = socket_.get_io_service();
 
     // Schedule an asynchronous accept.
-    ao::ip::tcp::acceptor a(io_service, e.protocol());
+    ao::ip::tcp::acceptor a(io_service, e.second.protocol());
     ao::socket_base::reuse_address reuse_address(true);
     a.set_option(reuse_address);
     setup_windows(configuration, a);
-    a.bind(e);
+    a.bind(e.second);
     a.listen();
 
     std::cout << "Waiting " << timeout

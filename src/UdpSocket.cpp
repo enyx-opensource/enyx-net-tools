@@ -58,17 +58,17 @@ UdpSocket::connect(const Configuration & configuration)
 {
     const auto e = resolve<protocol_type>(configuration.endpoint);
 
-    socket_.open(e.protocol());
+    socket_.open(e.second.protocol());
 
     setup_windows(configuration, socket_);
 
     ao::socket_base::reuse_address reuse_address(true);
     socket_.set_option(reuse_address);
 
-    socket_.bind(endpoint_type{e.protocol(), e.port()});
+    socket_.bind(e.first);
 
     // Set the default destination address of this datagram socket.
-    socket_.connect(e);
+    socket_.connect(e.second);
 
     std::cout << "Connected to '" << socket_.remote_endpoint() << "' from '"
               << socket_.local_endpoint() << "'" << std::endl;
