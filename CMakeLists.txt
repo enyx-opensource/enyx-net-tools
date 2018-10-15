@@ -10,7 +10,7 @@ set(CMAKE_CXX_FLAGS "-Wall ${CMAKE_CXX_FLAGS}")
 
 find_package(Threads REQUIRED)
 set(Boost_NO_BOOST_CMAKE ON)
-find_package(Boost 1.64 REQUIRED
+find_package(Boost REQUIRED
     COMPONENTS
         thread system regex program_options date_time
         regex filesystem unit_test_framework)
