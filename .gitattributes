@@ -1,0 +1,2 @@
+appveyor.xml export-ignore
+.travis.xml export-ignore
