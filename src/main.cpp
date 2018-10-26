@@ -41,7 +41,7 @@ main(int argc, char **argv)
     catch (const boost::system::system_error & e)
     {
         std::cerr << e.what() << "." << std::endl;
-        return EXIT_FAILURE;
+        return e.code().value();
     }
     catch (const std::exception & e)
     {
