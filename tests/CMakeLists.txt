@@ -1,4 +1,4 @@
-if (Boost_FIND_VERSION VERSION_GREATER "1.62")
+if(Boost_VERSION VERSION_GREATER "106200")
 
 add_executable(tests_iperf
     TestIperf.cpp)
