@@ -40,6 +40,7 @@ UdpSocket::UdpSocket(boost::asio::io_service & io_service,
                      const Configuration & configuration)
     : Socket(io_service),
       socket_(io_service_),
+      discarded_endpoint_(),
       peer_endpoint_()
 {
     switch (configuration.mode)
@@ -68,10 +69,10 @@ UdpSocket::connect(const Configuration & configuration)
     socket_.bind(e.first);
 
     // Set the default destination address of this datagram socket.
-    socket_.connect(e.second);
+    peer_endpoint_ = e.second;
 
     std::cout << "Local '" << socket_.local_endpoint() << "' to remote '"
-              << socket_.remote_endpoint() << "'" << std::endl;
+              << peer_endpoint_ << "'" << std::endl;
 }
 
 void

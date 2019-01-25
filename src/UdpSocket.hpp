@@ -50,14 +50,14 @@ public:
     void
     async_receive(const MutableBufferSequence & buffers, ReadHandler handler)
     {
-        socket_.async_receive(buffers, handler);
+        socket_.async_receive_from(buffers, discarded_endpoint_, handler);
     }
 
     template<typename ConstBufferSequence, typename WriteHandler>
     void
     async_send(const ConstBufferSequence & buffers, WriteHandler handler)
     {
-        socket_.async_send(buffers, handler);
+        socket_.async_send_to(buffers, peer_endpoint_, handler);
     }
 
     void
@@ -73,6 +73,7 @@ private:
 
 private:
     socket_type socket_;
+    endpoint_type discarded_endpoint_;
     endpoint_type peer_endpoint_;
 };
 

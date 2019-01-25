@@ -46,3 +46,7 @@ Connect on _loopback_ port _12345_ and generate _10Mb/s_ traffic while capping r
 
     $nx-iperf --connect 127.0.0.1:12345 --tx-bandwidth 10Mb --rx-bandwidth 5Mb
 
+Connect on remote _192.168.10.4_ port _12345_ from local address _192.168.10.3_ port _54321_ and generate _10Mb/s_ traffic while capping reception to _5Mb/s_:
+
+    $nx-iperf --connect 192.168.10.3:54321:192.168.10.4:12345 --tx-bandwidth 10Mb --rx-bandwidth 5Mb
+
