@@ -27,6 +27,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <vector>
+#include <random>
 
 #include <boost/system/error_code.hpp>
 
@@ -101,6 +102,9 @@ protected:
     virtual void
     finish() = 0;
 
+    std::size_t
+    get_max_packet_size();
+
 protected:
     Configuration configuration_;
     boost::asio::io_service io_service_;
@@ -111,6 +115,10 @@ protected:
     BandwidthThrottle send_throttle_;
     buffer_type receive_buffer_;
     BandwidthThrottle receive_throttle_;
+
+private:
+    std::mt19937 random_generator_;
+    std::uniform_int_distribution<std::size_t> distribution_;
 };
 
 } // namespace tcp_tester

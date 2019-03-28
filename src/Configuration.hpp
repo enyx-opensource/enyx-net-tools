@@ -31,6 +31,7 @@
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
 #include "Size.hpp"
+#include "Range.hpp"
 
 namespace enyx {
 namespace tcp_tester {
@@ -52,6 +53,7 @@ struct Configuration
     uint64_t bandwidth_sampling_frequency;
     Size windows;
     Size size;
+    Range packet_size;
     boost::posix_time::time_duration duration_margin;
     ShutdownPolicy shutdown_policy;
     Protocol protocol;

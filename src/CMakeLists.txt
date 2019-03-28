@@ -4,6 +4,8 @@ add_executable(nx-iperf
     Error.cpp
     Size.hpp
     Size.cpp
+    Range.hpp
+    Range.cpp
     Socket.hpp
     Socket.cpp
     TcpSocket.hpp

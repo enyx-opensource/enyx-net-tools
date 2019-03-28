@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2016 EnyxSA
+ * Copyright (c) 2018 EnyxSA
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,40 +24,48 @@
 
 #pragma once
 
-#include <cstddef>
+#include <stdint.h>
+#include <iosfwd>
 
-#include "Application.hpp"
-#include "Configuration.hpp"
-#include "UdpSocket.hpp"
+#include "Size.hpp"
 
 namespace enyx {
 namespace tcp_tester {
 
-class UdpApplication : public Application
+class Range
 {
 public:
-    UdpApplication(const Configuration & configuration);
+    using ValueType = Size;
+
+public:
+    Range(void) = default;
+
+    Range(const ValueType & value)
+        : low_(value), high_(value)
+    { }
+
+    Range(const ValueType & low, const ValueType & high)
+        : low_(low), high_(high)
+    { }
+
+    ValueType
+    low() const
+    { return low_; }
+
+    ValueType
+    high() const
+    { return high_; }
 
 private:
-    virtual void
-    async_receive(std::size_t slice_remaining_size = 0ULL) override;
-
-    virtual void
-    finish_receive() override;
-
-    virtual void
-    async_send(std::size_t slice_remaining_size = 0ULL) override;
-
-    virtual void
-    finish_send() override;
-
-    virtual void
-    finish() override;
-
-private:
-    UdpSocket socket_;
+    ValueType low_;
+    ValueType high_;
 };
+
+std::istream &
+operator>>(std::istream & in, Range & range);
+
+std::ostream &
+operator<<(std::ostream & out, const Range & range);
 
 } // namespace tcp_tester
 } // namespace enyx
-

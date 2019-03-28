@@ -93,6 +93,13 @@ parse_command_line(int argc, char** argv)
         ("windows,w",
             po::value<Size>(&c.windows),
             "Tcp socket buffer size (e.g. 8KiB, 16MiB)\n")
+        ("max-datagram-size,S",
+            po::value<Range>(&c.packet_size)
+                ->default_value(Range{Size{1024}}),
+            "UDP and TCP packet maximum size. Accepted values:\n"
+            "  - X The maximum size is equal to X\n"
+            "  - X:Y The maximum size is randomly chosen for each packet "
+            "between X & Y (inclusive)\n")
         ("duration-margin,d",
             po::value<pt::time_duration>(&c.duration_margin)
                 ->default_value(pt::not_a_date_time, "infinity"),
