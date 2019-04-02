@@ -93,7 +93,7 @@ parse_command_line(int argc, char** argv)
         ("windows,w",
             po::value<Size>(&c.windows),
             "Tcp socket buffer size (e.g. 8KiB, 16MiB)\n")
-        ("max-datagram-size,S",
+        ("max-datagram-size,D",
             po::value<Range>(&c.packet_size)
                 ->default_value(Range{Size{1024}}),
             "UDP and TCP packet maximum size. Accepted values:\n"
