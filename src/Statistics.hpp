@@ -37,9 +37,9 @@ namespace tcp_tester {
 struct Statistics
 {
     boost::posix_time::ptime start_date;
-    Size received_bytes_count;
+    alignas(128) Size received_bytes_count;
     boost::posix_time::time_duration receive_duration;
-    Size sent_bytes_count;
+    alignas(128) Size sent_bytes_count;
     boost::posix_time::time_duration send_duration;
 };
 
