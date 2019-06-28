@@ -50,7 +50,8 @@ public:
 private:
     using buffer_type = std::vector<std::uint8_t>;
 
-    enum { BUFFER_SIZE = 32 * 1024 };
+protected:
+    enum { BUFFER_SIZE = 128 * 1024 };
 
 protected:
     boost::posix_time::time_duration
