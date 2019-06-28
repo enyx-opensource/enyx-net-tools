@@ -54,8 +54,13 @@ private:
     virtual void
     finish() override;
 
+    std::size_t
+    get_max_datagram_size();
+
 private:
     UdpSocket socket_;
+    std::mt19937 random_generator_;
+    std::uniform_int_distribution<std::size_t> distribution_;
 };
 
 } // namespace tcp_tester

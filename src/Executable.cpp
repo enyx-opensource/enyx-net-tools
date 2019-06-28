@@ -78,7 +78,7 @@ parse_command_line(int argc, char** argv)
             "Limit receive bandwidth (e.g. 8kB, 16MB, 1Gbit, 1GB)\n")
         ("bandwidth-sampling-frequency,f",
             po::value<uint64_t>(&c.bandwidth_sampling_frequency)
-                ->default_value(10),
+                ->default_value(1000),
             "Bandwidth calculation frequency Hz\n")
         ("verify,v",
             po::value<Configuration::Verify>(&c.verify)
@@ -95,7 +95,7 @@ parse_command_line(int argc, char** argv)
             "Tcp socket buffer size (e.g. 8KiB, 16MiB)\n")
         ("max-datagram-size,D",
             po::value<Range>(&c.packet_size)
-                ->default_value(Range{Size{1024}}),
+                ->default_value(Range{Size{(1 << 16) - 64}}),
             "UDP and TCP packet maximum size. Accepted values:\n"
             "  - X The maximum size is equal to X\n"
             "  - X:Y The maximum size is randomly chosen for each packet "

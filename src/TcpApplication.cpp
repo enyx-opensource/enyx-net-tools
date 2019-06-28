@@ -104,9 +104,8 @@ TcpApplication::async_send(std::size_t slice_remaining_size)
                                      statistics_.sent_bytes_count;
 
         slice_remaining_size = std::min(slice_remaining_size, remaining_size);
-        std::size_t offset = statistics_.sent_bytes_count % BUFFER_SIZE;
-        std::size_t size = std::min(slice_remaining_size,
-                                    send_buffer_.size() - offset);
+        std::size_t offset = std::uint8_t(statistics_.sent_bytes_count);
+        std::size_t size = std::min(slice_remaining_size, BUFFER_SIZE - offset);
 
         socket_.async_send(boost::asio::buffer(&send_buffer_[offset], size),
                            boost::bind(&TcpApplication::on_send,

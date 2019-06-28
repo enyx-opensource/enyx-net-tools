@@ -51,10 +51,7 @@ Application::Application(const Configuration & configuration)
       receive_buffer_(BUFFER_SIZE),
       receive_throttle_(io_service_,
                         configuration.receive_bandwidth,
-                        configuration.bandwidth_sampling_frequency),
-      random_generator_{std::random_device{}()},
-      distribution_{configuration_.packet_size.low(),
-                    configuration_.packet_size.high()}
+                        configuration.bandwidth_sampling_frequency)
 {
     for (std::size_t i = 0, e = send_buffer_.size(); i != e; ++i)
         send_buffer_[i] = uint8_t(i);
@@ -241,12 +238,6 @@ Application::on_finish()
 {
     finish();
     io_service_.stop();
-}
-
-std::size_t
-Application::get_max_packet_size()
-{
-    return distribution_(random_generator_);
 }
 
 } // namespace tcp_tester

@@ -43,7 +43,10 @@ namespace pt = boost::posix_time;
 
 UdpApplication::UdpApplication(const Configuration & configuration)
     : Application(configuration),
-      socket_(io_service_, configuration)
+      socket_(io_service_, configuration),
+      random_generator_{std::random_device{}()},
+      distribution_{configuration_.packet_size.low(),
+                    configuration_.packet_size.high()}
 { }
 
 void
@@ -81,16 +84,17 @@ UdpApplication::async_send(std::size_t slice_remaining_size)
                                          this, _1));
     else
     {
-        std::size_t remaining_size = configuration_.size -
-                                     statistics_.sent_bytes_count;
+        std::size_t const remaining_size = configuration_.size -
+                                           statistics_.sent_bytes_count;
 
         slice_remaining_size = std::min(slice_remaining_size, remaining_size);
-        std::size_t offset = statistics_.sent_bytes_count % BUFFER_SIZE;
-        std::size_t size = std::min(std::min(slice_remaining_size,
-                                             get_max_packet_size()),
-                                    send_buffer_.size() - offset);
+        std::size_t const offset = std::uint8_t(statistics_.sent_bytes_count);
+        std::size_t const datagram_size = std::min(slice_remaining_size,
+                                                   get_max_datagram_size());
+        assert(datagram_size <= BUFFER_SIZE - offset);
 
-        socket_.async_send(boost::asio::buffer(&send_buffer_[offset], size),
+        socket_.async_send(boost::asio::buffer(&send_buffer_[offset],
+                                               datagram_size),
                            boost::bind(&UdpApplication::on_send,
                                        this,
                                        ao::placeholders::bytes_transferred,
@@ -110,6 +114,12 @@ void
 UdpApplication::finish()
 {
     socket_.close();
+}
+
+std::size_t
+UdpApplication::get_max_datagram_size()
+{
+    return distribution_(random_generator_);
 }
 
 } // namespace tcp_tester
