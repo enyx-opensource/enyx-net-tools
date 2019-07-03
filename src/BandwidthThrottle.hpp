@@ -7,7 +7,7 @@
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
 namespace enyx {
-namespace tcp_tester {
+namespace net_tester {
 
 class BandwidthThrottle
 {
@@ -82,5 +82,5 @@ private:
     boost::posix_time::ptime next_slice_start_;
 };
 
-} // namespace tcp_tester
+} // namespace net_tester
 } // namespace enyx

@@ -1,7 +1,7 @@
 #include "BandwidthThrottle.hpp"
 
 namespace enyx {
-namespace tcp_tester {
+namespace net_tester {
 
 namespace pt = boost::posix_time;
 
@@ -31,5 +31,5 @@ BandwidthThrottle::to_slice_bytes_count(std::size_t bandwidth,
     return bandwidth / sampling_frequency;
 }
 
-} // namespace tcp_tester
+} // namespace net_tester
 } // namespace enyx

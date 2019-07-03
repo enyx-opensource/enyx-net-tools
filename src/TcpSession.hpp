@@ -33,7 +33,7 @@
 #include "TcpSocket.hpp"
 
 namespace enyx {
-namespace tcp_tester {
+namespace net_tester {
 
 class TcpSession : public Session
 {
@@ -64,5 +64,5 @@ private:
     TcpSocket socket_;
 };
 
-} // namespace tcp_tester
+} // namespace net_tester
 } // namespace enyx

@@ -36,7 +36,7 @@
 #include "Statistics.hpp"
 
 namespace enyx {
-namespace tcp_tester {
+namespace net_tester {
 
 struct Session
 {
@@ -115,6 +115,6 @@ protected:
     BandwidthThrottle receive_throttle_;
 };
 
-} // namespace tcp_tester
+} // namespace net_tester
 } // namespace enyx
 

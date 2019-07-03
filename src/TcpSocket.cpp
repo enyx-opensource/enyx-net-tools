@@ -30,7 +30,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace enyx {
-namespace tcp_tester {
+namespace net_tester {
 
 namespace ao = boost::asio;
 namespace pt = boost::posix_time;
@@ -128,5 +128,5 @@ TcpSocket::close()
     socket_.close(failure);
 }
 
-} // namespace tcp_tester
+} // namespace net_tester
 } // namespace enyx

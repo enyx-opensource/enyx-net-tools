@@ -35,7 +35,7 @@ main(int argc, char **argv)
 {
     try
     {
-        enyx::tcp_tester::Executable::run(argc, argv);
+        enyx::net_tester::Executable::run(argc, argv);
         return EXIT_SUCCESS;
     }
     catch (const boost::system::system_error & e)

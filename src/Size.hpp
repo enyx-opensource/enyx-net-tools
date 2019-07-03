@@ -28,7 +28,7 @@
 #include <iosfwd>
 
 namespace enyx {
-namespace tcp_tester {
+namespace net_tester {
 
 class Size
 {
@@ -64,5 +64,5 @@ operator>>(std::istream & in, Size & size);
 std::ostream &
 operator<<(std::ostream & out, const Size & size);
 
-} // namespace tcp_tester
+} // namespace net_tester
 } // namespace enyx

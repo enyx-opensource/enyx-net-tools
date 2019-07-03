@@ -32,7 +32,7 @@
 #include "Size.hpp"
 
 namespace enyx {
-namespace tcp_tester {
+namespace net_tester {
 
 struct Statistics
 {
@@ -46,5 +46,5 @@ struct Statistics
 std::ostream &
 operator<<(std::ostream & out, const Statistics & statistics);
 
-} // namespace tcp_tester
+} // namespace net_tester
 } // namespace enyx

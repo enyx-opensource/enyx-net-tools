@@ -3,7 +3,7 @@
 #include <boost/system/error_code.hpp>
 
 namespace enyx {
-namespace tcp_tester {
+namespace net_tester {
 
 namespace error {
 
@@ -25,14 +25,14 @@ make_error_code(Error e);
 const boost::system::error_category &
 tcp_tester_category();
 
-} // namespace tcp_tester
+} // namespace net_tester
 } // namespace enyx
 
 namespace boost {
 namespace system {
 
 template<>
-struct is_error_code_enum<enyx::tcp_tester::error::Error>
+struct is_error_code_enum<enyx::net_tester::error::Error>
 { static const bool value =  true; };
 
 } // namespace system

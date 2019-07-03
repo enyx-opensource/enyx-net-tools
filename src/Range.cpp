@@ -33,7 +33,7 @@
 #include <boost/regex.hpp>
 
 namespace enyx {
-namespace tcp_tester {
+namespace net_tester {
 
 namespace {
 
@@ -96,6 +96,6 @@ operator<<(std::ostream & out, const Range & range)
     return out;
 }
 
-} // namespace tcp_tester
+} // namespace net_tester
 } // namespace enyx
 

@@ -35,7 +35,7 @@
 #include "UdpSession.hpp"
 
 namespace enyx {
-namespace tcp_tester {
+namespace net_tester {
 
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
@@ -180,5 +180,5 @@ run(int argc, char** argv)
 
 }
 
-} // namespace tcp_tester
+} // namespace net_tester
 } // namespace enyx

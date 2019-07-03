@@ -25,7 +25,7 @@
 #pragma once
 
 namespace enyx {
-namespace tcp_tester {
+namespace net_tester {
 
 namespace Executable {
 
@@ -34,5 +34,5 @@ run(int argc, char**argv);
 
 } // namespace Executable
 
-} // namespace tcp_tester
+} // namespace net_tester
 } // namespace enyx

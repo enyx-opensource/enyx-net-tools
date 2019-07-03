@@ -34,7 +34,7 @@
 #include "Range.hpp"
 
 namespace enyx {
-namespace tcp_tester {
+namespace net_tester {
 
 struct Configuration
 {
@@ -89,5 +89,5 @@ operator>>(std::istream & in, Configuration::Protocol & protocol);
 std::ostream &
 operator<<(std::ostream & out, const Configuration::Protocol & protocol);
 
-} // namespace tcp_tester
+} // namespace net_tester
 } // namespace enyx

@@ -32,7 +32,7 @@
 #include "Socket.hpp"
 
 namespace enyx {
-namespace tcp_tester {
+namespace net_tester {
 
 class UdpSocket : public Socket
 {
@@ -77,6 +77,6 @@ private:
     endpoint_type peer_endpoint_;
 };
 
-} // namespace tcp_tester
+} // namespace net_tester
 } // namespace enyx
 

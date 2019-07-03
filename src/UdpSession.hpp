@@ -31,7 +31,7 @@
 #include "UdpSocket.hpp"
 
 namespace enyx {
-namespace tcp_tester {
+namespace net_tester {
 
 class UdpSession : public Session
 {
@@ -63,6 +63,6 @@ private:
     std::uniform_int_distribution<std::size_t> distribution_;
 };
 
-} // namespace tcp_tester
+} // namespace net_tester
 } // namespace enyx
 

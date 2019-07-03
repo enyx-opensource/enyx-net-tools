@@ -31,7 +31,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace enyx {
-namespace tcp_tester {
+namespace net_tester {
 
 namespace pt = boost::posix_time;
 
@@ -73,5 +73,5 @@ operator<<(std::ostream & out, const Statistics & statistics)
                << std::endl;
 }
 
-} // namespace tcp_tester
+} // namespace net_tester
 } // namespace enyx

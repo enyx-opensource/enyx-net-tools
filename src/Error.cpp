@@ -3,7 +3,7 @@
 #include "Cxx11.hpp"
 
 namespace enyx {
-namespace tcp_tester {
+namespace net_tester {
 
 namespace {
 
@@ -52,6 +52,6 @@ make_error_code(Error e)
 
 } // namespace error
 
-} // namespace tcp_tester
+} // namespace net_tester
 } // namespace enyx
 

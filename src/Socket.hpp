@@ -31,7 +31,7 @@
 #include "Configuration.hpp"
 
 namespace enyx {
-namespace tcp_tester {
+namespace net_tester {
 
 class Socket
 {
@@ -95,5 +95,5 @@ Socket::setup_windows(const Configuration & configuration,
     }
 }
 
-} // namespace tcp_tester
+} // namespace net_tester
 } // namespace enyx

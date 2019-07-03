@@ -30,7 +30,7 @@
 #include "Size.hpp"
 
 namespace enyx {
-namespace tcp_tester {
+namespace net_tester {
 
 class Range
 {
@@ -67,5 +67,5 @@ operator>>(std::istream & in, Range & range);
 std::ostream &
 operator<<(std::ostream & out, const Range & range);
 
-} // namespace tcp_tester
+} // namespace net_tester
 } // namespace enyx

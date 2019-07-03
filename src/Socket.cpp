@@ -25,11 +25,11 @@
 #include "Socket.hpp"
 
 namespace enyx {
-namespace tcp_tester {
+namespace net_tester {
 
 Socket::Socket(boost::asio::io_service & io_service)
     : io_service_(io_service)
 { }
 
-} // namespace tcp_tester
+} // namespace net_tester
 } // namespace enyx

@@ -32,7 +32,7 @@
 #include "Socket.hpp"
 
 namespace enyx {
-namespace tcp_tester {
+namespace net_tester {
 
 class TcpSocket : public Socket
 {
@@ -77,6 +77,6 @@ private:
     socket_type socket_;
 };
 
-} // namespace tcp_tester
+} // namespace net_tester
 } // namespace enyx
 

@@ -34,7 +34,7 @@
 #include "Error.hpp"
 
 namespace enyx {
-namespace tcp_tester {
+namespace net_tester {
 
 namespace ao = boost::asio;
 namespace pt = boost::posix_time;
@@ -239,5 +239,5 @@ Session::on_finish()
     io_service_.stop();
 }
 
-} // namespace tcp_tester
+} // namespace net_tester
 } // namespace enyx

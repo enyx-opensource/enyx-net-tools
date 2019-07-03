@@ -36,7 +36,7 @@
 #include "Statistics.hpp"
 
 namespace enyx {
-namespace tcp_tester {
+namespace net_tester {
 
 namespace ao = boost::asio;
 namespace pt = boost::posix_time;
@@ -122,5 +122,5 @@ UdpSession::get_max_datagram_size()
     return distribution_(random_generator_);
 }
 
-} // namespace tcp_tester
+} // namespace net_tester
 } // namespace enyx
