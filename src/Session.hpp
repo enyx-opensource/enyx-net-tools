@@ -38,11 +38,11 @@
 namespace enyx {
 namespace tcp_tester {
 
-struct Application
+struct Session
 {
 public:
     explicit
-    Application(const Configuration & configuration);
+    Session(const Configuration & configuration);
 
     void
     run();

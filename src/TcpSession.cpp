@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-#include "UdpApplication.hpp"
+#include "TcpSession.hpp"
 
 #include <iostream>
 
@@ -32,8 +32,6 @@
 #include <boost/asio/error.hpp>
 
 #include "Error.hpp"
-#include "Socket.hpp"
-#include "Statistics.hpp"
 
 namespace enyx {
 namespace tcp_tester {
@@ -41,28 +39,25 @@ namespace tcp_tester {
 namespace ao = boost::asio;
 namespace pt = boost::posix_time;
 
-UdpApplication::UdpApplication(const Configuration & configuration)
-    : Application(configuration),
-      socket_(io_service_, configuration),
-      random_generator_{std::random_device{}()},
-      distribution_{configuration_.packet_size.low(),
-                    configuration_.packet_size.high()}
+TcpSession::TcpSession(const Configuration & configuration)
+    : Session(configuration),
+      socket_(io_service_, configuration)
 { }
 
 void
-UdpApplication::async_receive(std::size_t slice_remaining_size)
+TcpSession::async_receive(std::size_t slice_remaining_size)
 {
     // If we've sent all data allowed within the current slice.
     if (slice_remaining_size == 0)
         // The throttle will call this method again
         // when the next slice will start with a slice_remaining_size
         // set as required by bandwidth.
-        receive_throttle_.delay(boost::bind(&UdpApplication::async_receive,
+        receive_throttle_.delay(boost::bind(&TcpSession::async_receive,
                                             this, _1));
     else
         socket_.async_receive(boost::asio::buffer(receive_buffer_,
                                                   slice_remaining_size),
-                              boost::bind(&UdpApplication::on_receive,
+                              boost::bind(&TcpSession::on_receive,
                                           this,
                                           ao::placeholders::bytes_transferred,
                                           ao::placeholders::error,
@@ -70,32 +65,50 @@ UdpApplication::async_receive(std::size_t slice_remaining_size)
 }
 
 void
-UdpApplication::finish_receive()
+TcpSession::finish_receive()
 {
-    Application::finish_receive();
-    on_receive_complete();
+    Session::finish_receive();
+
+    if (configuration_.shutdown_policy == Configuration::RECEIVE_COMPLETE)
+        socket_.shutdown_send();
+
+    socket_.async_receive(boost::asio::buffer(receive_buffer_, 1),
+                          boost::bind(&TcpSession::on_eof,
+                                      this,
+                                      ao::placeholders::bytes_transferred,
+                                      ao::placeholders::error));
+
 }
 
 void
-UdpApplication::async_send(std::size_t slice_remaining_size)
+TcpSession::on_eof(std::size_t bytes_transferred,
+                       const boost::system::error_code & failure)
+{
+    if (failure == ao::error::eof)
+        on_receive_complete();
+    else if (failure)
+        abort(failure);
+    else
+        abort(error::unexpected_data);
+}
+
+void
+TcpSession::async_send(std::size_t slice_remaining_size)
 {
     if (slice_remaining_size == 0)
-        send_throttle_.delay(boost::bind(&UdpApplication::async_send,
+        send_throttle_.delay(boost::bind(&TcpSession::async_send,
                                          this, _1));
     else
     {
-        std::size_t const remaining_size = configuration_.size -
-                                           statistics_.sent_bytes_count;
+        std::size_t remaining_size = configuration_.size -
+                                     statistics_.sent_bytes_count;
 
         slice_remaining_size = std::min(slice_remaining_size, remaining_size);
-        std::size_t const offset = std::uint8_t(statistics_.sent_bytes_count);
-        std::size_t const datagram_size = std::min(slice_remaining_size,
-                                                   get_max_datagram_size());
-        assert(datagram_size <= BUFFER_SIZE - offset);
+        std::size_t offset = std::uint8_t(statistics_.sent_bytes_count);
+        std::size_t size = std::min(slice_remaining_size, BUFFER_SIZE - offset);
 
-        socket_.async_send(boost::asio::buffer(&send_buffer_[offset],
-                                               datagram_size),
-                           boost::bind(&UdpApplication::on_send,
+        socket_.async_send(boost::asio::buffer(&send_buffer_[offset], size),
+                           boost::bind(&TcpSession::on_send,
                                        this,
                                        ao::placeholders::bytes_transferred,
                                        ao::placeholders::error,
@@ -104,22 +117,23 @@ UdpApplication::async_send(std::size_t slice_remaining_size)
 }
 
 void
-UdpApplication::finish_send()
+TcpSession::finish_send()
 {
-    Application::finish_send();
+    Session::finish_send();
+
+    if (configuration_.shutdown_policy == Configuration::SEND_COMPLETE)
+        socket_.shutdown_send();
+
     on_send_complete();
 }
 
 void
-UdpApplication::finish()
+TcpSession::finish()
 {
-    socket_.close();
-}
+    if (configuration_.shutdown_policy == Configuration::WAIT_FOR_PEER)
+        socket_.shutdown_send();
 
-std::size_t
-UdpApplication::get_max_datagram_size()
-{
-    return distribution_(random_generator_);
+    socket_.close();
 }
 
 } // namespace tcp_tester

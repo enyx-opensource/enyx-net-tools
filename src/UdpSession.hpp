@@ -26,17 +26,17 @@
 
 #include <cstddef>
 
-#include "Application.hpp"
+#include "Session.hpp"
 #include "Configuration.hpp"
 #include "UdpSocket.hpp"
 
 namespace enyx {
 namespace tcp_tester {
 
-class UdpApplication : public Application
+class UdpSession : public Session
 {
 public:
-    UdpApplication(const Configuration & configuration);
+    UdpSession(const Configuration & configuration);
 
 private:
     virtual void

@@ -31,8 +31,8 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include "Configuration.hpp"
-#include "TcpApplication.hpp"
-#include "UdpApplication.hpp"
+#include "TcpSession.hpp"
+#include "UdpSession.hpp"
 
 namespace enyx {
 namespace tcp_tester {
@@ -93,13 +93,6 @@ parse_command_line(int argc, char** argv)
         ("windows,w",
             po::value<Size>(&c.windows),
             "Tcp socket buffer size (e.g. 8KiB, 16MiB)\n")
-        ("max-datagram-size,D",
-            po::value<Range>(&c.packet_size)
-                ->default_value(Range{Size{(1 << 16) - 64}}),
-            "UDP and TCP packet maximum size. Accepted values:\n"
-            "  - X The maximum size is equal to X\n"
-            "  - X:Y The maximum size is randomly chosen for each packet "
-            "between X & Y (inclusive)\n")
         ("duration-margin,d",
             po::value<pt::time_duration>(&c.duration_margin)
                 ->default_value(pt::not_a_date_time, "infinity"),
@@ -107,6 +100,17 @@ parse_command_line(int argc, char** argv)
             " complete without timeout error\n")
         ("help,h",
             "Print the command lines arguments\n");
+
+    po::options_description udp_optional("Udp related optional arguments");
+    udp_optional.add_options()
+        ("max-datagram-size,D",
+            po::value<Range>(&c.packet_size)
+                ->default_value(Range{Size{(1 << 16) - 64}}),
+            "UDP and TCP packet maximum size. Accepted values:\n"
+            "  - X The maximum size is equal to X\n"
+            "  - X:Y The maximum size is randomly chosen for each packet "
+            "between X & Y (inclusive)\n");
+
 
     po::options_description tcp_optional("Tcp related optional arguments");
     tcp_optional.add_options()
@@ -117,7 +121,7 @@ parse_command_line(int argc, char** argv)
             "  - send_complete\n  - receive_complete\n  - wait_for_peer\n");
 
     po::options_description all("Allowed options");
-    all.add(required).add(optional).add(tcp_optional);
+    all.add(required).add(optional).add(udp_optional).add(tcp_optional);
 
     po::variables_map args;
     po::store(po::parse_command_line(argc, argv, all), args);
@@ -169,9 +173,9 @@ run(int argc, char** argv)
 
     auto const configuration = parse_command_line(argc, argv);
     if (configuration.protocol == Configuration::TCP)
-        TcpApplication(configuration).run();
+        TcpSession(configuration).run();
     else
-        UdpApplication(configuration).run();
+        UdpSession(configuration).run();
 }
 
 }

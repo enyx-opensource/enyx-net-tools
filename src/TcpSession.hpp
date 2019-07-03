@@ -28,17 +28,17 @@
 
 #include <boost/system/error_code.hpp>
 
-#include "Application.hpp"
+#include "Session.hpp"
 #include "Configuration.hpp"
 #include "TcpSocket.hpp"
 
 namespace enyx {
 namespace tcp_tester {
 
-class TcpApplication : public Application
+class TcpSession : public Session
 {
 public:
-    TcpApplication(const Configuration & configuration);
+    TcpSession(const Configuration & configuration);
 
 private:
     virtual void

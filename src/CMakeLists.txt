@@ -20,12 +20,12 @@ add_executable(nx-iperf
     Configuration.cpp
     BandwidthThrottle.hpp
     BandwidthThrottle.cpp
-    Application.hpp
-    Application.cpp
-    UdpApplication.hpp
-    UdpApplication.cpp
-    TcpApplication.hpp
-    TcpApplication.cpp)
+    Session.hpp
+    Session.cpp
+    UdpSession.hpp
+    UdpSession.cpp
+    TcpSession.hpp
+    TcpSession.cpp)
 
 target_link_libraries(nx-iperf
     ${Boost_LIBRARIES}

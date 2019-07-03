@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-#include "Application.hpp"
+#include "Session.hpp"
 
 #include <iostream>
 
@@ -39,7 +39,7 @@ namespace tcp_tester {
 namespace ao = boost::asio;
 namespace pt = boost::posix_time;
 
-Application::Application(const Configuration & configuration)
+Session::Session(const Configuration & configuration)
     : configuration_(configuration),
       io_service_(), work_(io_service_),
       statistics_(),
@@ -60,7 +60,7 @@ Application::Application(const Configuration & configuration)
 }
 
 void
-Application::run()
+Session::run()
 {
     statistics_.start_date = pt::microsec_clock::universal_time();
 
@@ -75,7 +75,7 @@ Application::run()
         async_send();
 
     ao::deadline_timer t(io_service_, estimate_test_duration());
-    t.async_wait(boost::bind(&Application::on_timeout, this,
+    t.async_wait(boost::bind(&Session::on_timeout, this,
                              ao::placeholders::error));
 
     io_service_.run();
@@ -86,7 +86,7 @@ Application::run()
 }
 
 pt::time_duration
-Application::estimate_test_duration()
+Session::estimate_test_duration()
 {
     uint64_t bandwidth = std::min(configuration_.receive_bandwidth,
                                   configuration_.send_bandwidth);
@@ -104,7 +104,7 @@ Application::estimate_test_duration()
 }
 
 void
-Application::on_timeout(const boost::system::error_code & failure)
+Session::on_timeout(const boost::system::error_code & failure)
 {
     if (failure)
         return;
@@ -113,7 +113,7 @@ Application::on_timeout(const boost::system::error_code & failure)
 }
 
 void
-Application::on_receive(std::size_t bytes_transferred,
+Session::on_receive(std::size_t bytes_transferred,
                         const boost::system::error_code & failure,
                         std::size_t slice_remaining_size)
 {
@@ -138,15 +138,14 @@ Application::on_receive(std::size_t bytes_transferred,
 }
 
 void
-Application::finish_receive()
+Session::finish_receive()
 {
-
     statistics_.receive_duration = pt::microsec_clock::universal_time() -
                                    statistics_.start_date;
 }
 
 void
-Application::on_receive_complete()
+Session::on_receive_complete()
 {
     std::cout << "Finished receiving" << std::endl;
 
@@ -155,7 +154,7 @@ Application::on_receive_complete()
 }
 
 void
-Application::verify(std::size_t bytes_transferred)
+Session::verify(std::size_t bytes_transferred)
 {
     uint8_t expected_byte = uint8_t(statistics_.received_bytes_count);
 
@@ -175,7 +174,7 @@ Application::verify(std::size_t bytes_transferred)
 }
 
 void
-Application::verify(std::size_t offset, uint8_t expected_byte)
+Session::verify(std::size_t offset, uint8_t expected_byte)
 {
     uint8_t actual = receive_buffer_[offset];
     if (actual != expected_byte)
@@ -190,7 +189,7 @@ Application::verify(std::size_t offset, uint8_t expected_byte)
 }
 
 void
-Application::on_send(std::size_t bytes_transferred,
+Session::on_send(std::size_t bytes_transferred,
                      const boost::system::error_code & failure,
                      std::size_t slice_remaining_size)
 {
@@ -211,14 +210,14 @@ Application::on_send(std::size_t bytes_transferred,
 }
 
 void
-Application::finish_send()
+Session::finish_send()
 {
     statistics_.send_duration = pt::microsec_clock::universal_time() -
                                 statistics_.start_date;
 }
 
 void
-Application::on_send_complete()
+Session::on_send_complete()
 {
     std::cout << "Finished sending" << std::endl;
 
@@ -227,14 +226,14 @@ Application::on_send_complete()
 }
 
 void
-Application::abort(const boost::system::error_code & failure)
+Session::abort(const boost::system::error_code & failure)
 {
     on_finish();
     failure_ = failure;
 }
 
 void
-Application::on_finish()
+Session::on_finish()
 {
     finish();
     io_service_.stop();
