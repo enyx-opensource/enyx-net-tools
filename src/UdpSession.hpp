@@ -27,8 +27,8 @@
 #include <cstddef>
 
 #include "Session.hpp"
-#include "Configuration.hpp"
 #include "UdpSocket.hpp"
+#include "HandlerAllocator.hpp"
 
 namespace enyx {
 namespace net_tester {
@@ -36,7 +36,8 @@ namespace net_tester {
 class UdpSession : public Session
 {
 public:
-    UdpSession(const Configuration & configuration);
+    UdpSession(boost::asio::io_service & io_service,
+               const Configuration & configuration);
 
 private:
     virtual void
@@ -59,6 +60,8 @@ private:
 
 private:
     UdpSocket socket_;
+    HandlerMemory send_handler_memory_;
+    HandlerMemory receive_handler_memory_;
     std::mt19937 random_generator_;
     std::uniform_int_distribution<std::size_t> distribution_;
 };

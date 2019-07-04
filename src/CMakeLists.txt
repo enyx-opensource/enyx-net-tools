@@ -1,5 +1,7 @@
 add_executable(nx-iperf
     main.cpp
+    CacheLine.hpp
+    HandlerAllocator.hpp
     Error.hpp
     Error.cpp
     Size.hpp
@@ -14,6 +16,8 @@ add_executable(nx-iperf
     UdpSocket.cpp
     Statistics.hpp
     Statistics.cpp
+    Application.hpp
+    Application.cpp
     Executable.hpp
     Executable.cpp
     Configuration.hpp

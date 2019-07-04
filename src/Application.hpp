@@ -24,31 +24,18 @@
 
 #pragma once
 
-#include <stdint.h>
-#include <iosfwd>
-
-#include <boost/date_time/posix_time/posix_time_types.hpp>
-
-#include "Size.hpp"
-#include "CacheLine.hpp"
+#include "Configuration.hpp"
 
 namespace enyx {
 namespace net_tester {
 
-struct Statistics
-{
-    boost::posix_time::ptime start_date;
-    Size received_bytes_count;
-    boost::posix_time::time_duration receive_duration;
-    // As receive and send can be performed by two different threads
-    // ensure no false sharing occurs.
-    CacheLine padding;
-    Size sent_bytes_count;
-    boost::posix_time::time_duration send_duration;
-};
+namespace Application {
 
-std::ostream &
-operator<<(std::ostream & out, const Statistics & statistics);
+void
+run(const Configuration & configuration);
+
+} // namespace Application
 
 } // namespace net_tester
 } // namespace enyx
+

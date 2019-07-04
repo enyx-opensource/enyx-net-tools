@@ -29,8 +29,8 @@
 #include <boost/system/error_code.hpp>
 
 #include "Session.hpp"
-#include "Configuration.hpp"
 #include "TcpSocket.hpp"
+#include "HandlerAllocator.hpp"
 
 namespace enyx {
 namespace net_tester {
@@ -38,7 +38,8 @@ namespace net_tester {
 class TcpSession : public Session
 {
 public:
-    TcpSession(const Configuration & configuration);
+    TcpSession(boost::asio::io_service & io_service,
+               const Configuration & configuration);
 
 private:
     virtual void
@@ -48,8 +49,8 @@ private:
     finish_receive() override;
 
     void
-    on_eof(std::size_t bytes_transferred,
-           const boost::system::error_code & failure);
+    on_eof(const boost::system::error_code & failure,
+           std::size_t bytes_transferred);
 
     virtual void
     async_send(std::size_t slice_remaining_size = 0ULL) override;
@@ -62,6 +63,8 @@ private:
 
 private:
     TcpSocket socket_;
+    HandlerMemory send_handler_memory_;
+    HandlerMemory receive_handler_memory_;
 };
 
 } // namespace net_tester

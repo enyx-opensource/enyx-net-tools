@@ -1,0 +1,88 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2016 EnyxSA
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+#include "Application.hpp"
+
+#include <pthread.h>
+
+#include <thread>
+#include <memory>
+#include <iostream>
+
+#include <boost/asio/io_service.hpp>
+
+#include "TcpSession.hpp"
+#include "UdpSession.hpp"
+
+namespace enyx {
+namespace net_tester {
+
+namespace {
+
+using SessionPtr = std::unique_ptr<Session>;
+
+SessionPtr
+create_session(boost::asio::io_service & io_service,
+               const Configuration & configuration)
+{
+    SessionPtr session;
+    if (configuration.protocol == Configuration::TCP)
+        session.reset(new TcpSession{io_service, configuration});
+    else
+        session.reset(new UdpSession{io_service, configuration});
+
+    return session;
+}
+
+}
+
+namespace Application {
+
+void
+run(const Configuration & configuration)
+{
+    boost::asio::io_service io_service{int(configuration.threads_count)};
+
+    std::vector<SessionPtr> sessions;
+    for (auto i = 0ULL; i != configuration.sessions_count; ++i)
+        sessions.push_back(create_session(io_service, configuration));
+
+    for (auto & session : sessions)
+        session->async_run();
+
+    std::vector<std::thread> threads;
+    for (auto i = 0ULL; i != configuration.threads_count; ++i)
+        threads.emplace_back([&io_service] { io_service.run(); });
+
+    for (auto & thread : threads)
+        thread.join();
+
+    for (auto & session : sessions)
+        session->finalize();
+}
+
+} // namespace Application
+
+} // namespace net_tester
+} // namespace enyx

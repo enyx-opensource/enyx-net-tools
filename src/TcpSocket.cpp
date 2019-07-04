@@ -71,10 +71,10 @@ TcpSocket::connect(const Configuration & configuration)
 
 void
 TcpSocket::listen(const Configuration & configuration,
-               const boost::posix_time::time_duration & timeout)
+                  const boost::posix_time::time_duration & timeout)
 {
     const auto e = resolve<protocol_type>(configuration.endpoint);
-    auto & io_service = socket_.get_io_service();
+    boost::asio::io_service io_service;
 
     // Schedule an asynchronous accept.
     ao::ip::tcp::acceptor a(io_service, e.second.protocol());
@@ -111,7 +111,7 @@ TcpSocket::listen(const Configuration & configuration,
               << socket_.local_endpoint() << "'" << std::endl;
 
     t.cancel();
-    io_service.run_one();
+    io_service.run();
 }
 
 void

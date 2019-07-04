@@ -30,6 +30,7 @@
 #include <random>
 
 #include <boost/system/error_code.hpp>
+#include <boost/asio/deadline_timer.hpp>
 
 #include "Configuration.hpp"
 #include "BandwidthThrottle.hpp"
@@ -42,10 +43,14 @@ struct Session
 {
 public:
     explicit
-    Session(const Configuration & configuration);
+    Session(boost::asio::io_service & io_service,
+            const Configuration & configuration);
 
     void
-    run();
+    async_run();
+
+    void
+    finalize();
 
 private:
     using buffer_type = std::vector<std::uint8_t>;
@@ -54,18 +59,12 @@ protected:
     enum { BUFFER_SIZE = 32 << 20 };
 
 protected:
-    boost::posix_time::time_duration
-    estimate_test_duration();
-
-    void
-    on_timeout(const boost::system::error_code & failure);
-
     virtual void
     async_receive(std::size_t slice_remaining_size = 0ULL) = 0;
 
     void
-    on_receive(std::size_t bytes_transferred,
-               const boost::system::error_code & failure,
+    on_receive(const boost::system::error_code & failure,
+               std::size_t bytes_transferred,
                std::size_t slice_remaining_size);
 
     virtual void
@@ -78,8 +77,8 @@ protected:
     async_send(std::size_t slice_remaining_size = 0ULL) = 0;
 
     void
-    on_send(std::size_t bytes_transferred,
-            const boost::system::error_code & failure,
+    on_send(const boost::system::error_code & failure,
+            std::size_t bytes_transferred,
             std::size_t slice_remaining_size);
 
     virtual void
@@ -103,10 +102,13 @@ protected:
     virtual void
     finish() = 0;
 
+    static boost::posix_time::time_duration
+    estimate_test_duration(const Configuration & configuration);
+
 protected:
+    boost::asio::io_service & io_service_;
     Configuration configuration_;
-    boost::asio::io_service io_service_;
-    boost::asio::io_service::work work_;
+    boost::asio::deadline_timer timeout_timer_;
     Statistics statistics_;
     boost::system::error_code failure_;
     buffer_type send_buffer_;

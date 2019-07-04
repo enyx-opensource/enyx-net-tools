@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <iosfwd>
 
@@ -50,13 +50,15 @@ struct Configuration
     std::string endpoint;
     Size send_bandwidth;
     Size receive_bandwidth;
-    uint64_t bandwidth_sampling_frequency;
+    std::uint64_t bandwidth_sampling_frequency;
     Size windows;
     Size size;
     Range packet_size;
     boost::posix_time::time_duration duration_margin;
     ShutdownPolicy shutdown_policy;
     Protocol protocol;
+    std::size_t threads_count;
+    std::size_t sessions_count;
 };
 
 std::istream &

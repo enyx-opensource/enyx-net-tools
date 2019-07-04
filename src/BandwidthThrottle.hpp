@@ -1,10 +1,13 @@
 #pragma once
 
+#include <chrono>
+
 #include <boost/bind.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/placeholders.hpp>
-#include <boost/asio/deadline_timer.hpp>
-#include <boost/date_time/posix_time/posix_time_types.hpp>
+#include <boost/asio/steady_timer.hpp>
+
+#include "HandlerAllocator.hpp"
 
 namespace enyx {
 namespace net_tester {
@@ -18,56 +21,24 @@ public:
 
     template<typename Functor>
     void
-    delay(Functor f)
+    delay(Functor && f)
     {
-        namespace pt = boost::posix_time;
+        timer_.expires_at(next_slice_start_);
 
-        const pt::ptime now = pt::microsec_clock::universal_time();
-        if (next_slice_start_ <= now)
-        {
-            next_slice_start_ = now + slice_duration_;
+        auto handler = [this, f](boost::system::error_code const& failure) {
+            if (failure)
+                return;
+
+            next_slice_start_ += slice_duration_;
             f(slice_bytes_count_);
-        }
-        else
-        {
-            timer_.expires_at(next_slice_start_);
+        };
 
-            // This prevent boost::bind function composition.
-            // i.e. we don't want f to be called before
-            // on_ready is executed but after.
-            typedef Holder<Functor> holder_type;
-            holder_type holder = { f };
-
-            timer_.async_wait(boost::bind(&BandwidthThrottle::on_ready<holder_type>,
-                                          this,
-                                          boost::asio::placeholders::error,
-                                          holder));
-        }
-    }
-
-    template<typename Functor>
-    void
-    on_ready(const boost::system::error_code & failure,
-             Functor f)
-    {
-        namespace pt = boost::posix_time;
-
-        if (failure)
-            return;
-
-        next_slice_start_ += slice_duration_;
-        f.f(slice_bytes_count_);
+        timer_.async_wait(make_handler(handler_memory_,
+                                       std::move(handler)));
     }
 
 private:
-    template<typename Functor>
-    struct Holder
-    {
-        Functor f;
-    };
-
-private:
-    static boost::posix_time::time_duration
+    static std::chrono::steady_clock::duration
     to_slice_duration(std::size_t sampling_frequency);
 
 
@@ -76,10 +47,11 @@ private:
                          std::size_t sampling_frequency);
 
 private:
-    boost::asio::deadline_timer timer_;
+    boost::asio::steady_timer timer_;
+    HandlerMemory handler_memory_;
     std::size_t slice_bytes_count_;
-    boost::posix_time::time_duration slice_duration_;
-    boost::posix_time::ptime next_slice_start_;
+    std::chrono::steady_clock::duration slice_duration_;
+    std::chrono::steady_clock::time_point next_slice_start_;
 };
 
 } // namespace net_tester

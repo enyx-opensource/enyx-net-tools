@@ -39,17 +39,19 @@ namespace net_tester {
 namespace ao = boost::asio;
 namespace pt = boost::posix_time;
 
-Session::Session(const Configuration & configuration)
-    : configuration_(configuration),
-      io_service_(), work_(io_service_),
+Session::Session(boost::asio::io_service & io_service,
+                 const Configuration & configuration)
+    : io_service_(io_service),
+      configuration_(configuration),
+      timeout_timer_(io_service, estimate_test_duration(configuration)),
       statistics_(),
       failure_(),
       send_buffer_(BUFFER_SIZE),
-      send_throttle_(io_service_,
+      send_throttle_(io_service,
                      configuration.send_bandwidth,
                      configuration.bandwidth_sampling_frequency),
       receive_buffer_(BUFFER_SIZE),
-      receive_throttle_(io_service_,
+      receive_throttle_(io_service,
                         configuration.receive_bandwidth,
                         configuration.bandwidth_sampling_frequency)
 {
@@ -60,7 +62,7 @@ Session::Session(const Configuration & configuration)
 }
 
 void
-Session::run()
+Session::async_run()
 {
     statistics_.start_date = pt::microsec_clock::universal_time();
 
@@ -74,11 +76,17 @@ Session::run()
     else
         async_send();
 
-    ao::deadline_timer t(io_service_, estimate_test_duration());
-    t.async_wait(boost::bind(&Session::on_timeout, this,
-                             ao::placeholders::error));
+    timeout_timer_.async_wait([this](boost::system::error_code const& failure) {
+        if (failure)
+            return;
 
-    io_service_.run();
+        abort(error::test_timeout);
+    });
+}
+
+void
+Session::finalize()
+{
     std::cout << statistics_ << std::endl;
 
     if (failure_)
@@ -86,36 +94,28 @@ Session::run()
 }
 
 pt::time_duration
-Session::estimate_test_duration()
+Session::estimate_test_duration(const Configuration & configuration)
 {
-    uint64_t bandwidth = std::min(configuration_.receive_bandwidth,
-                                  configuration_.send_bandwidth);
+    uint64_t bandwidth = std::min(configuration.receive_bandwidth,
+                                  configuration.send_bandwidth);
 
-    pt::time_duration duration = pt::seconds(configuration_.size / bandwidth + 1);
+    pt::time_duration duration = pt::seconds(configuration.size / bandwidth + 1);
 
-    if (configuration_.duration_margin.is_special())
-        configuration_.duration_margin = duration / 10;
+    auto duration_margin = configuration.duration_margin;
+    if (duration_margin.is_special())
+        duration_margin = duration / 10;
 
     std::cout << "Estimated duration " << duration
-              << " (+" << configuration_.duration_margin
+              << " (+" << duration_margin
               << ")." << std::endl;
 
-    return duration + configuration_.duration_margin;
+    return duration + duration_margin;
 }
 
 void
-Session::on_timeout(const boost::system::error_code & failure)
-{
-    if (failure)
-        return;
-
-    abort(error::test_timeout);
-}
-
-void
-Session::on_receive(std::size_t bytes_transferred,
-                        const boost::system::error_code & failure,
-                        std::size_t slice_remaining_size)
+Session::on_receive(const boost::system::error_code & failure,
+                    std::size_t bytes_transferred,
+                    std::size_t slice_remaining_size)
 {
     if (failure == ao::error::operation_aborted)
         return;
@@ -189,9 +189,9 @@ Session::verify(std::size_t offset, uint8_t expected_byte)
 }
 
 void
-Session::on_send(std::size_t bytes_transferred,
-                     const boost::system::error_code & failure,
-                     std::size_t slice_remaining_size)
+Session::on_send(const boost::system::error_code & failure,
+                 std::size_t bytes_transferred,
+                 std::size_t slice_remaining_size)
 {
     if (failure == ao::error::operation_aborted)
         return;
@@ -228,15 +228,16 @@ Session::on_send_complete()
 void
 Session::abort(const boost::system::error_code & failure)
 {
-    on_finish();
+    // Stop the whole application
+    io_service_.stop();
     failure_ = failure;
 }
 
 void
 Session::on_finish()
 {
+    timeout_timer_.cancel();
     finish();
-    io_service_.stop();
 }
 
 } // namespace net_tester

@@ -39,9 +39,12 @@ namespace net_tester {
 namespace ao = boost::asio;
 namespace pt = boost::posix_time;
 
-TcpSession::TcpSession(const Configuration & configuration)
-    : Session(configuration),
-      socket_(io_service_, configuration)
+TcpSession::TcpSession(boost::asio::io_service & io_service,
+                       const Configuration & configuration)
+    : Session(io_service, configuration),
+      socket_(io_service, configuration),
+      send_handler_memory_(),
+      receive_handler_memory_()
 { }
 
 void
@@ -52,16 +55,23 @@ TcpSession::async_receive(std::size_t slice_remaining_size)
         // The throttle will call this method again
         // when the next slice will start with a slice_remaining_size
         // set as required by bandwidth.
-        receive_throttle_.delay(boost::bind(&TcpSession::async_receive,
-                                            this, _1));
+        receive_throttle_.delay([this](std::size_t s){ async_receive(s); });
     else
-        socket_.async_receive(boost::asio::buffer(receive_buffer_,
-                                                  slice_remaining_size),
-                              boost::bind(&TcpSession::on_receive,
-                                          this,
-                                          ao::placeholders::bytes_transferred,
-                                          ao::placeholders::error,
-                                          slice_remaining_size));
+    {
+        auto handler = [this, slice_remaining_size]
+                (boost::system::error_code const& failure,
+                 std::size_t bytes_transferred) {
+            on_receive(failure, bytes_transferred, slice_remaining_size);
+        };
+
+        auto custom_handler = make_handler(receive_handler_memory_,
+                                           std::move(handler));
+
+        auto buffer = boost::asio::buffer(receive_buffer_,
+                                          slice_remaining_size);
+
+        socket_.async_receive(std::move(buffer), std::move(custom_handler));
+    }
 }
 
 void
@@ -72,17 +82,23 @@ TcpSession::finish_receive()
     if (configuration_.shutdown_policy == Configuration::RECEIVE_COMPLETE)
         socket_.shutdown_send();
 
-    socket_.async_receive(boost::asio::buffer(receive_buffer_, 1),
-                          boost::bind(&TcpSession::on_eof,
-                                      this,
-                                      ao::placeholders::bytes_transferred,
-                                      ao::placeholders::error));
+    auto handler = [this]
+            (boost::system::error_code const& failure,
+             std::size_t bytes_transferred) {
+        on_eof(failure, bytes_transferred);
+    };
 
+    auto custom_handler = make_handler(receive_handler_memory_,
+                                       std::move(handler));
+
+    auto buffer = boost::asio::buffer(receive_buffer_, 1);
+
+    socket_.async_receive(std::move(buffer), std::move(custom_handler));
 }
 
 void
-TcpSession::on_eof(std::size_t bytes_transferred,
-                       const boost::system::error_code & failure)
+TcpSession::on_eof(const boost::system::error_code & failure,
+                   std::size_t bytes_transferred)
 {
     if (failure == ao::error::eof)
         on_receive_complete();
@@ -96,8 +112,7 @@ void
 TcpSession::async_send(std::size_t slice_remaining_size)
 {
     if (slice_remaining_size == 0)
-        send_throttle_.delay(boost::bind(&TcpSession::async_send,
-                                         this, _1));
+        send_throttle_.delay([this](std::size_t s){ async_send(s); });
     else
     {
         std::size_t remaining_size = configuration_.size -
@@ -107,12 +122,18 @@ TcpSession::async_send(std::size_t slice_remaining_size)
         std::size_t offset = std::uint8_t(statistics_.sent_bytes_count);
         std::size_t size = std::min(slice_remaining_size, BUFFER_SIZE - offset);
 
-        socket_.async_send(boost::asio::buffer(&send_buffer_[offset], size),
-                           boost::bind(&TcpSession::on_send,
-                                       this,
-                                       ao::placeholders::bytes_transferred,
-                                       ao::placeholders::error,
-                                       slice_remaining_size));
+        auto handler = [this, slice_remaining_size]
+                (boost::system::error_code const& failure,
+                 std::size_t size) {
+            on_send(failure, size, slice_remaining_size);
+        };
+
+        auto custom_handler = make_handler(send_handler_memory_,
+                                           std::move(handler));
+
+        auto buffer = boost::asio::buffer(&send_buffer_[offset], size);
+
+        socket_.async_send(std::move(buffer), std::move(custom_handler));
     }
 }
 
@@ -132,7 +153,6 @@ TcpSession::finish()
 {
     if (configuration_.shutdown_policy == Configuration::WAIT_FOR_PEER)
         socket_.shutdown_send();
-
     socket_.close();
 }
 

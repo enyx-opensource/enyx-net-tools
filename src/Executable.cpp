@@ -26,13 +26,13 @@
 
 #include <stdexcept>
 #include <sstream>
+#include <thread>
 
 #include <boost/program_options.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include "Configuration.hpp"
-#include "TcpSession.hpp"
-#include "UdpSession.hpp"
+#include "Application.hpp"
 
 namespace enyx {
 namespace net_tester {
@@ -98,6 +98,14 @@ parse_command_line(int argc, char** argv)
                 ->default_value(pt::not_a_date_time, "infinity"),
             "Extra time from theoretical test time allowed to"
             " complete without timeout error\n")
+        ("threads-count,x",
+            po::value<std::size_t>(&c.threads_count)
+                ->default_value(std::thread::hardware_concurrency()),
+            "Threads used to process network events\n")
+        ("sessions-count,X",
+            po::value<std::size_t>(&c.sessions_count)
+                ->default_value(1),
+            "Network session count used to send and received\n")
         ("help,h",
             "Print the command lines arguments\n");
 
@@ -133,10 +141,13 @@ parse_command_line(int argc, char** argv)
         throw std::runtime_error("help is requested");
     }
 
+    if (args["threads-count"].as<std::size_t>() == 0)
+        throw std::runtime_error("--threads-count can't be equal to 0");
+
     if (args.count("connect") && args.count("listen"))
         throw std::runtime_error("--connect and --listen are mutually exclusive");
 
-    if (args["bandwidth-sampling-frequency"].as<uint64_t>() == 0)
+    if (args["bandwidth-sampling-frequency"].as<std::uint64_t>() == 0)
         throw std::runtime_error("invalid --bandwidth-sampling-frequency");
 
     if (! args.count("size") || args["size"].as<Size>() == 0)
@@ -170,12 +181,7 @@ void
 run(int argc, char** argv)
 {
     std::cout << "Starting.." << std::endl;
-
-    auto const configuration = parse_command_line(argc, argv);
-    if (configuration.protocol == Configuration::TCP)
-        TcpSession(configuration).run();
-    else
-        UdpSession(configuration).run();
+    Application::run(parse_command_line(argc, argv));
 }
 
 }
