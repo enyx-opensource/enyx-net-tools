@@ -39,7 +39,7 @@ class TcpSession : public Session
 {
 public:
     TcpSession(boost::asio::io_service & io_service,
-               const Configuration & configuration);
+               const SessionConfiguration & configuration);
 
 private:
     virtual void

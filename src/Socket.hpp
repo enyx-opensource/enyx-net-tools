@@ -28,7 +28,7 @@
 #include <boost/system/error_code.hpp>
 #include <boost/regex.hpp>
 
-#include "Configuration.hpp"
+#include "SessionConfiguration.hpp"
 
 namespace enyx {
 namespace net_tester {
@@ -46,7 +46,7 @@ protected:
 
     template<typename SocketType>
     static void
-    setup_windows(const Configuration & configuration,
+    setup_windows(const SessionConfiguration & configuration,
                   SocketType & socket);
 
 protected:
@@ -82,7 +82,7 @@ Socket::resolve(const std::string & s)
 
 template<typename SocketType>
 void
-Socket::setup_windows(const Configuration & configuration,
+Socket::setup_windows(const SessionConfiguration & configuration,
                       SocketType & socket)
 {
     if (configuration.windows)

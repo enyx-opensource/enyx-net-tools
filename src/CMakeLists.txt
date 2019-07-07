@@ -20,8 +20,9 @@ add_executable(nx-iperf
     Application.cpp
     Executable.hpp
     Executable.cpp
-    Configuration.hpp
-    Configuration.cpp
+    ApplicationConfiguration.hpp
+    SessionConfiguration.hpp
+    SessionConfiguration.cpp
     BandwidthThrottle.hpp
     BandwidthThrottle.cpp
     Session.hpp

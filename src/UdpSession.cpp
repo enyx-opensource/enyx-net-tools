@@ -42,7 +42,7 @@ namespace ao = boost::asio;
 namespace pt = boost::posix_time;
 
 UdpSession::UdpSession(boost::asio::io_service & io_service,
-                       const Configuration & configuration)
+                       const SessionConfiguration & configuration)
     : Session(io_service, configuration),
       socket_(io_service, configuration),
       send_handler_memory_(),

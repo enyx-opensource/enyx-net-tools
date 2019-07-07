@@ -40,7 +40,7 @@ namespace ao = boost::asio;
 namespace pt = boost::posix_time;
 
 TcpSession::TcpSession(boost::asio::io_service & io_service,
-                       const Configuration & configuration)
+                       const SessionConfiguration & configuration)
     : Session(io_service, configuration),
       socket_(io_service, configuration),
       send_handler_memory_(),
@@ -79,7 +79,7 @@ TcpSession::finish_receive()
 {
     Session::finish_receive();
 
-    if (configuration_.shutdown_policy == Configuration::RECEIVE_COMPLETE)
+    if (configuration_.shutdown_policy == SessionConfiguration::RECEIVE_COMPLETE)
         socket_.shutdown_send();
 
     auto handler = [this]
@@ -142,7 +142,7 @@ TcpSession::finish_send()
 {
     Session::finish_send();
 
-    if (configuration_.shutdown_policy == Configuration::SEND_COMPLETE)
+    if (configuration_.shutdown_policy == SessionConfiguration::SEND_COMPLETE)
         socket_.shutdown_send();
 
     on_send_complete();
@@ -151,7 +151,7 @@ TcpSession::finish_send()
 void
 TcpSession::finish()
 {
-    if (configuration_.shutdown_policy == Configuration::WAIT_FOR_PEER)
+    if (configuration_.shutdown_policy == SessionConfiguration::WAIT_FOR_PEER)
         socket_.shutdown_send();
     socket_.close();
 }

@@ -40,7 +40,7 @@ namespace ao = boost::asio;
 namespace pt = boost::posix_time;
 
 Session::Session(boost::asio::io_service & io_service,
-                 const Configuration & configuration)
+                 const SessionConfiguration & configuration)
     : io_service_(io_service),
       configuration_(configuration),
       timeout_timer_(io_service, estimate_test_duration(configuration)),
@@ -66,12 +66,12 @@ Session::async_run()
 {
     statistics_.start_date = pt::microsec_clock::universal_time();
 
-    if (configuration_.direction == Configuration::TX)
+    if (configuration_.direction == SessionConfiguration::TX)
         finish_receive();
     else
         async_receive();
 
-    if (configuration_.direction == Configuration::RX)
+    if (configuration_.direction == SessionConfiguration::RX)
         finish_send();
     else
         async_send();
@@ -94,7 +94,7 @@ Session::finalize()
 }
 
 pt::time_duration
-Session::estimate_test_duration(const Configuration & configuration)
+Session::estimate_test_duration(const SessionConfiguration & configuration)
 {
     uint64_t bandwidth = std::min(configuration.receive_bandwidth,
                                   configuration.send_bandwidth);
@@ -149,7 +149,7 @@ Session::on_receive_complete()
 {
     std::cout << "Finished receiving" << std::endl;
 
-    if (configuration_.direction != Configuration::TX)
+    if (configuration_.direction != SessionConfiguration::TX)
         on_finish();
 }
 
@@ -161,12 +161,12 @@ Session::verify(std::size_t bytes_transferred)
     switch (configuration_.verify)
     {
     default:
-    case Configuration::NONE:
+    case SessionConfiguration::NONE:
         break;
-    case Configuration::FIRST:
+    case SessionConfiguration::FIRST:
         verify(0, expected_byte);
         break;
-    case Configuration::ALL:
+    case SessionConfiguration::ALL:
         for (std::size_t i = 0; i != bytes_transferred; ++i)
             verify(i, expected_byte++);
         break;
@@ -221,7 +221,7 @@ Session::on_send_complete()
 {
     std::cout << "Finished sending" << std::endl;
 
-    if (configuration_.direction == Configuration::TX)
+    if (configuration_.direction == SessionConfiguration::TX)
         on_finish();
 }
 

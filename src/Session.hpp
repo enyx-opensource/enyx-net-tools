@@ -32,7 +32,7 @@
 #include <boost/system/error_code.hpp>
 #include <boost/asio/deadline_timer.hpp>
 
-#include "Configuration.hpp"
+#include "SessionConfiguration.hpp"
 #include "BandwidthThrottle.hpp"
 #include "Statistics.hpp"
 
@@ -44,7 +44,7 @@ struct Session
 public:
     explicit
     Session(boost::asio::io_service & io_service,
-            const Configuration & configuration);
+            const SessionConfiguration & configuration);
 
     void
     async_run();
@@ -103,11 +103,11 @@ protected:
     finish() = 0;
 
     static boost::posix_time::time_duration
-    estimate_test_duration(const Configuration & configuration);
+    estimate_test_duration(const SessionConfiguration & configuration);
 
 protected:
     boost::asio::io_service & io_service_;
-    Configuration configuration_;
+    SessionConfiguration configuration_;
     boost::asio::deadline_timer timeout_timer_;
     Statistics statistics_;
     boost::system::error_code failure_;

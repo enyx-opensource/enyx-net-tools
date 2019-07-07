@@ -25,13 +25,16 @@
 #include "Executable.hpp"
 
 #include <stdexcept>
+#include <iterator>
 #include <sstream>
+#include <fstream>
 #include <thread>
 
 #include <boost/program_options.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include "Configuration.hpp"
+#include "SessionConfiguration.hpp"
+#include "ApplicationConfiguration.hpp"
 #include "Application.hpp"
 
 namespace enyx {
@@ -44,13 +47,67 @@ namespace {
 
 constexpr Size DEFAULT_BANDWIDTH = Size(128 * 1000 * 1000, Size::SI);
 
-Configuration
-parse_command_line(int argc, char** argv)
+void
+fill_configuration(SessionConfiguration & c,
+                   const po::options_description & options,
+                   std::vector<std::string> argv)
 {
-    Configuration c = {};
+    auto file_parser = po::command_line_parser(argv)
+            .options(options)
+            .run();
+    po::variables_map args;
+    po::store(file_parser, args);
+    po::notify(args);
 
-    po::options_description required("Required arguments");
-    required.add_options()
+    if (args.count("connect") && args.count("listen"))
+        throw std::runtime_error{"--connect and --listen are mutually exclusive"};
+
+    if (args["bandwidth-sampling-frequency"].as<std::uint64_t>() == 0)
+        throw std::runtime_error{"invalid --bandwidth-sampling-frequency"};
+
+    if (! args.count("size") || args["size"].as<Size>() == 0)
+        throw std::runtime_error{"--size is required"};
+
+    if (c.direction == SessionConfiguration::TX &&
+            c.shutdown_policy == SessionConfiguration::RECEIVE_COMPLETE)
+        throw std::runtime_error{"TX mode isn't compatible with shutdown "
+                "policy receive_complete"};
+
+    if (c.direction == SessionConfiguration::RX &&
+            c.shutdown_policy == SessionConfiguration::SEND_COMPLETE)
+        throw std::runtime_error{"RX mode isn't compatible with shutdown "
+                "policy send_complete"};
+
+    if (args.count("connect"))
+        c.mode = SessionConfiguration::CLIENT;
+    else if (args.count("listen"))
+        c.mode = SessionConfiguration::SERVER;
+    else
+        throw std::runtime_error{"--connect or --listen are required"};
+}
+
+void
+fill_configuration(SessionConfiguration & c,
+                   const po::options_description & options,
+                   std::string const& line)
+{
+    std::istringstream s{line};
+
+    using tokenizer = std::istream_iterator<std::string>;
+    std::vector<std::string> argv{"enyx-net-bench"};
+    argv.insert(argv.end(), tokenizer{s}, tokenizer{});
+
+    fill_configuration(c, options, argv);
+}
+
+ApplicationConfiguration
+parse(int argc, char ** argv)
+{
+    ApplicationConfiguration app_configuration{};
+    SessionConfiguration c{};
+
+    po::options_description file_required{"Required arguments"};
+    file_required.add_options()
         ("connect,c",
             po::value<std::string>(&c.endpoint),
             "Connect to following address\n")
@@ -61,11 +118,11 @@ parse_command_line(int argc, char** argv)
             po::value<Size>(&c.size),
             "Amount of data to send (e.g. 8KiB, 16MiB, 1Gibit, 1GiB)\n");
 
-    po::options_description optional("Optional arguments");
-    optional.add_options()
+    po::options_description file_optional{"Optional arguments"};
+    file_optional.add_options()
         ("protocol,p",
-            po::value<Configuration::Protocol>(&c.protocol)
-                ->default_value(Configuration::TCP),
+            po::value<SessionConfiguration::Protocol>(&c.protocol)
+                ->default_value(SessionConfiguration::TCP),
             "Protocol used to transfer data. Accepted values:\n"
             "  - tcp\n  - udp\n")
         ("tx-bandwidth,t",
@@ -81,36 +138,27 @@ parse_command_line(int argc, char** argv)
                 ->default_value(1000),
             "Bandwidth calculation frequency Hz\n")
         ("verify,v",
-            po::value<Configuration::Verify>(&c.verify)
-                ->default_value(Configuration::NONE),
+            po::value<SessionConfiguration::Verify>(&c.verify)
+                ->default_value(SessionConfiguration::NONE),
             "Verify received bytes. Accepted values:\n"
             "  - none\n  - first\n  - all\n")
         ("mode,m",
-            po::value<Configuration::Direction>(&c.direction)
-                ->default_value(Configuration::BOTH),
+            po::value<SessionConfiguration::Direction>(&c.direction)
+                ->default_value(SessionConfiguration::BOTH),
             "Transfer mode. Accepted values:\n"
             "  - rx\n  - tx\n  - both\n")
         ("windows,w",
-            po::value<Size>(&c.windows),
+            po::value<Size>(&c.windows)
+                ->default_value(0),
             "Tcp socket buffer size (e.g. 8KiB, 16MiB)\n")
         ("duration-margin,d",
             po::value<pt::time_duration>(&c.duration_margin)
                 ->default_value(pt::not_a_date_time, "infinity"),
             "Extra time from theoretical test time allowed to"
-            " complete without timeout error\n")
-        ("threads-count,x",
-            po::value<std::size_t>(&c.threads_count)
-                ->default_value(std::thread::hardware_concurrency()),
-            "Threads used to process network events\n")
-        ("sessions-count,X",
-            po::value<std::size_t>(&c.sessions_count)
-                ->default_value(1),
-            "Network session count used to send and received\n")
-        ("help,h",
-            "Print the command lines arguments\n");
+            " complete without timeout error\n");
 
-    po::options_description udp_optional("Udp related optional arguments");
-    udp_optional.add_options()
+    po::options_description file_udp_optional{"Udp related optional arguments"};
+    file_udp_optional.add_options()
         ("max-datagram-size,D",
             po::value<Range>(&c.packet_size)
                 ->default_value(Range{Size{(1 << 16) - 64}}),
@@ -119,58 +167,73 @@ parse_command_line(int argc, char** argv)
             "  - X:Y The maximum size is randomly chosen for each packet "
             "between X & Y (inclusive)\n");
 
-
-    po::options_description tcp_optional("Tcp related optional arguments");
-    tcp_optional.add_options()
+    po::options_description file_tcp_optional{"Tcp related optional arguments"};
+    file_tcp_optional.add_options()
         ("shutdown-policy,S",
-            po::value<Configuration::ShutdownPolicy>(&c.shutdown_policy)
-                ->default_value(Configuration::SEND_COMPLETE),
+            po::value<SessionConfiguration::ShutdownPolicy>(&c.shutdown_policy)
+                ->default_value(SessionConfiguration::SEND_COMPLETE),
             "Connection shutdown policy. Accepted values:\n"
             "  - send_complete\n  - receive_complete\n  - wait_for_peer\n");
 
-    po::options_description all("Allowed options");
-    all.add(required).add(optional).add(udp_optional).add(tcp_optional);
+    po::options_description file_all{"CONFIGURATION FILE OPTIONS"};
+    file_all.add(file_required)
+            .add(file_optional)
+            .add(file_udp_optional)
+            .add(file_tcp_optional);
+
+    std::string file;
+    po::options_description cmd_required{"Required arguments"};
+    cmd_required.add_options()
+        ("configuration-file,c",
+            po::value<std::string>(&file),
+            "A file with one session configuration per line\n");
+
+    po::positional_options_description cmd_positions{};
+    cmd_positions.add("configuration-file", 1);
+
+    po::options_description cmd_optional{"Optional arguments"};
+    cmd_optional.add_options()
+        ("threads-count,x",
+            po::value<std::size_t>(&app_configuration.threads_count)
+                ->default_value(std::thread::hardware_concurrency()),
+            "Threads used to process network events\n")
+        ("help,h",
+            "Print the command lines arguments\n");
+
+    po::options_description cmd_all{"COMMAND LINE OPTIONS"};
+    cmd_all.add(cmd_required)
+           .add(cmd_optional);
 
     po::variables_map args;
-    po::store(po::parse_command_line(argc, argv, all), args);
+    auto cmd_parser = po::command_line_parser(argc, argv)
+            .options(cmd_all)
+            .positional(cmd_positions)
+            .run();
+    po::store(cmd_parser, args);
     po::notify(args);
 
     if (args.count("help"))
     {
+        po::options_description all;
+        all.add(cmd_all).add(file_all);
         std::cout << all << std::endl;
-        throw std::runtime_error("help is requested");
+        throw std::runtime_error{"help is requested"};
     }
 
+    if (! args.count("configuration-file"))
+        throw std::runtime_error{"--configuration-file argument is required"};
+
     if (args["threads-count"].as<std::size_t>() == 0)
-        throw std::runtime_error("--threads-count can't be equal to 0");
+        throw std::runtime_error{"--threads-count can't be equal to 0"};
 
-    if (args.count("connect") && args.count("listen"))
-        throw std::runtime_error("--connect and --listen are mutually exclusive");
+    std::ifstream command_line_file{file};
+    for (std::string line; std::getline(command_line_file, line); )
+    {
+        fill_configuration(c, file_all, line);
+        app_configuration.session_configurations.emplace_back(std::move(c));
+    }
 
-    if (args["bandwidth-sampling-frequency"].as<std::uint64_t>() == 0)
-        throw std::runtime_error("invalid --bandwidth-sampling-frequency");
-
-    if (! args.count("size") || args["size"].as<Size>() == 0)
-        throw std::runtime_error("--size is required");
-
-    if (c.direction == Configuration::TX &&
-            c.shutdown_policy == Configuration::RECEIVE_COMPLETE)
-        throw std::runtime_error("TX mode isn't compatible with shutdown "
-                "policy receive_complete");
-
-    if (c.direction == Configuration::RX &&
-            c.shutdown_policy == Configuration::SEND_COMPLETE)
-        throw std::runtime_error("RX mode isn't compatible with shutdown "
-                "policy send_complete");
-
-    if (args.count("connect"))
-        c.mode = Configuration::CLIENT;
-    else if (args.count("listen"))
-        c.mode = Configuration::SERVER;
-    else
-        throw std::runtime_error{"--connect or --listen are required"};
-
-    return c;
+    return app_configuration;
 }
 
 } // namespace
@@ -181,7 +244,7 @@ void
 run(int argc, char** argv)
 {
     std::cout << "Starting.." << std::endl;
-    Application::run(parse_command_line(argc, argv));
+    Application::run(parse(argc, argv));
 }
 
 }

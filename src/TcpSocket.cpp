@@ -36,24 +36,24 @@ namespace ao = boost::asio;
 namespace pt = boost::posix_time;
 
 TcpSocket::TcpSocket(boost::asio::io_service & io_service,
-               const Configuration & configuration)
+               const SessionConfiguration & configuration)
     : Socket(io_service),
       socket_(io_service_)
 {
     switch (configuration.mode)
     {
         default:
-        case Configuration::CLIENT:
+        case SessionConfiguration::CLIENT:
             connect(configuration);
             break;
-        case Configuration::SERVER:
+        case SessionConfiguration::SERVER:
             listen(configuration, pt::pos_infin);
             break;
     }
 }
 
 void
-TcpSocket::connect(const Configuration & configuration)
+TcpSocket::connect(const SessionConfiguration & configuration)
 {
     const auto e = resolve<protocol_type>(configuration.endpoint);
 
@@ -70,7 +70,7 @@ TcpSocket::connect(const Configuration & configuration)
 }
 
 void
-TcpSocket::listen(const Configuration & configuration,
+TcpSocket::listen(const SessionConfiguration & configuration,
                   const boost::posix_time::time_duration & timeout)
 {
     const auto e = resolve<protocol_type>(configuration.endpoint);

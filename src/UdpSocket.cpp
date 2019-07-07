@@ -37,7 +37,7 @@ namespace ao = boost::asio;
 namespace pt = boost::posix_time;
 
 UdpSocket::UdpSocket(boost::asio::io_service & io_service,
-                     const Configuration & configuration)
+                     const SessionConfiguration & configuration)
     : Socket(io_service),
       socket_(io_service_),
       discarded_endpoint_(),
@@ -46,16 +46,16 @@ UdpSocket::UdpSocket(boost::asio::io_service & io_service,
     switch (configuration.mode)
     {
         default:
-        case Configuration::SERVER:
+        case SessionConfiguration::SERVER:
             throw std::runtime_error{"Udp supports client mode only"};
-        case Configuration::CLIENT:
+        case SessionConfiguration::CLIENT:
             connect(configuration);
             break;
     }
 }
 
 void
-UdpSocket::connect(const Configuration & configuration)
+UdpSocket::connect(const SessionConfiguration & configuration)
 {
     const auto e = resolve<protocol_type>(configuration.endpoint);
 

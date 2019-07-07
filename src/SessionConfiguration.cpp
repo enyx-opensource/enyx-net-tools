@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-#include "Configuration.hpp"
+#include "SessionConfiguration.hpp"
 
 #include <stdexcept>
 #include <iostream>
@@ -34,7 +34,7 @@ namespace enyx {
 namespace net_tester {
 
 std::istream &
-operator>>(std::istream & in, Configuration::Verify & verify)
+operator>>(std::istream & in, SessionConfiguration::Verify & verify)
 {
     std::istream::sentry sentry(in);
 
@@ -44,11 +44,11 @@ operator>>(std::istream & in, Configuration::Verify & verify)
         in >> s;
 
         if (s == "none")
-            verify = Configuration::NONE;
+            verify = SessionConfiguration::NONE;
         else if (s == "first")
-            verify = Configuration::FIRST;
+            verify = SessionConfiguration::FIRST;
         else if (s == "all")
-            verify = Configuration::ALL;
+            verify = SessionConfiguration::ALL;
         else
             throw std::runtime_error("Unexpected verification mode");
     }
@@ -57,7 +57,7 @@ operator>>(std::istream & in, Configuration::Verify & verify)
 }
 
 std::ostream &
-operator<<(std::ostream & out, const Configuration::Verify & verify)
+operator<<(std::ostream & out, const SessionConfiguration::Verify & verify)
 {
     std::ostream::sentry sentry(out);
 
@@ -67,17 +67,17 @@ operator<<(std::ostream & out, const Configuration::Verify & verify)
     switch (verify)
     {
     default:
-    case Configuration::NONE:
+    case SessionConfiguration::NONE:
         return out << "none";
-    case Configuration::FIRST:
+    case SessionConfiguration::FIRST:
         return out << "first";
-    case Configuration::ALL:
+    case SessionConfiguration::ALL:
         return out << "all";
     }
 }
 
 std::ostream &
-operator<<(std::ostream & out, const Configuration::Mode & mode)
+operator<<(std::ostream & out, const SessionConfiguration::Mode & mode)
 {
     std::ostream::sentry sentry(out);
 
@@ -87,15 +87,15 @@ operator<<(std::ostream & out, const Configuration::Mode & mode)
     switch (mode)
     {
     default:
-    case Configuration::CLIENT:
+    case SessionConfiguration::CLIENT:
         return out << "client";
-    case Configuration::SERVER:
+    case SessionConfiguration::SERVER:
         return out << "server";
     }
 }
 
 std::istream &
-operator>>(std::istream & in, Configuration::Direction & direction)
+operator>>(std::istream & in, SessionConfiguration::Direction & direction)
 {
     std::istream::sentry sentry(in);
 
@@ -105,11 +105,11 @@ operator>>(std::istream & in, Configuration::Direction & direction)
         in >> s;
 
         if (s == "tx")
-            direction = Configuration::TX;
+            direction = SessionConfiguration::TX;
         else if (s == "rx")
-            direction = Configuration::RX;
+            direction = SessionConfiguration::RX;
         else if (s == "both")
-            direction = Configuration::BOTH;
+            direction = SessionConfiguration::BOTH;
         else
             throw std::runtime_error("Unexpected mode option value");
     }
@@ -118,7 +118,7 @@ operator>>(std::istream & in, Configuration::Direction & direction)
 }
 
 std::ostream &
-operator<<(std::ostream & out, const Configuration::Direction & direction)
+operator<<(std::ostream & out, const SessionConfiguration::Direction & direction)
 {
     std::ostream::sentry sentry(out);
 
@@ -128,17 +128,17 @@ operator<<(std::ostream & out, const Configuration::Direction & direction)
     switch (direction)
     {
     default:
-    case Configuration::RX:
+    case SessionConfiguration::RX:
         return out << "rx";
-    case Configuration::TX:
+    case SessionConfiguration::TX:
         return out << "tx";
-    case Configuration::BOTH:
+    case SessionConfiguration::BOTH:
         return out << "both";
     }
 }
 
 std::ostream &
-operator<<(std::ostream & out, const Configuration & configuration)
+operator<<(std::ostream & out, const SessionConfiguration & configuration)
 {
     std::ostream::sentry sentry(out);
 
@@ -173,7 +173,7 @@ operator<<(std::ostream & out, const Configuration & configuration)
 }
 
 std::istream &
-operator>>(std::istream & in, Configuration::ShutdownPolicy & policy)
+operator>>(std::istream & in, SessionConfiguration::ShutdownPolicy & policy)
 {
     std::istream::sentry sentry(in);
 
@@ -183,11 +183,11 @@ operator>>(std::istream & in, Configuration::ShutdownPolicy & policy)
         in >> s;
 
         if (s == "wait_for_peer")
-            policy = Configuration::WAIT_FOR_PEER;
+            policy = SessionConfiguration::WAIT_FOR_PEER;
         else if (s == "send_complete")
-            policy = Configuration::SEND_COMPLETE;
+            policy = SessionConfiguration::SEND_COMPLETE;
         else if (s == "receive_complete")
-            policy = Configuration::RECEIVE_COMPLETE;
+            policy = SessionConfiguration::RECEIVE_COMPLETE;
         else
             throw std::runtime_error("Unexpected shutdown policy");
     }
@@ -196,7 +196,7 @@ operator>>(std::istream & in, Configuration::ShutdownPolicy & policy)
 }
 
 std::ostream &
-operator<<(std::ostream & out, const Configuration::ShutdownPolicy & policy)
+operator<<(std::ostream & out, const SessionConfiguration::ShutdownPolicy & policy)
 {
     std::ostream::sentry sentry(out);
 
@@ -206,17 +206,17 @@ operator<<(std::ostream & out, const Configuration::ShutdownPolicy & policy)
     switch (policy)
     {
     default:
-    case Configuration::WAIT_FOR_PEER:
+    case SessionConfiguration::WAIT_FOR_PEER:
         return out << "wait_for_peer";
-    case Configuration::SEND_COMPLETE:
+    case SessionConfiguration::SEND_COMPLETE:
         return out << "send_complete";
-    case Configuration::RECEIVE_COMPLETE:
+    case SessionConfiguration::RECEIVE_COMPLETE:
         return out << "receive_complete";
     }
 }
 
 std::istream &
-operator>>(std::istream & in, Configuration::Protocol & protocol)
+operator>>(std::istream & in, SessionConfiguration::Protocol & protocol)
 {
     std::istream::sentry sentry(in);
 
@@ -226,9 +226,9 @@ operator>>(std::istream & in, Configuration::Protocol & protocol)
         in >> s;
 
         if (s == "tcp")
-            protocol = Configuration::TCP;
+            protocol = SessionConfiguration::TCP;
         else if (s == "udp")
-            protocol = Configuration::UDP;
+            protocol = SessionConfiguration::UDP;
         else
             throw std::runtime_error("Unexpected protocol");
     }
@@ -237,7 +237,7 @@ operator>>(std::istream & in, Configuration::Protocol & protocol)
 }
 
 std::ostream &
-operator<<(std::ostream & out, const Configuration::Protocol & protocol)
+operator<<(std::ostream & out, const SessionConfiguration::Protocol & protocol)
 {
     std::ostream::sentry sentry(out);
 
@@ -247,9 +247,9 @@ operator<<(std::ostream & out, const Configuration::Protocol & protocol)
     switch (protocol)
     {
     default:
-    case Configuration::TCP:
+    case SessionConfiguration::TCP:
         return out << "tcp";
-    case Configuration::UDP:
+    case SessionConfiguration::UDP:
         return out << "udp";
     }
 }

@@ -37,7 +37,7 @@ class UdpSession : public Session
 {
 public:
     UdpSession(boost::asio::io_service & io_service,
-               const Configuration & configuration);
+               const SessionConfiguration & configuration);
 
 private:
     virtual void

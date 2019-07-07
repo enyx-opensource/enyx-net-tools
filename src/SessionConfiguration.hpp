@@ -27,6 +27,7 @@
 #include <cstdint>
 #include <string>
 #include <iosfwd>
+#include <vector>
 
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
@@ -36,7 +37,7 @@
 namespace enyx {
 namespace net_tester {
 
-struct Configuration
+struct SessionConfiguration
 {
     enum Mode { CLIENT, SERVER };
     enum Verify { NONE, FIRST, ALL };
@@ -58,38 +59,39 @@ struct Configuration
     ShutdownPolicy shutdown_policy;
     Protocol protocol;
     std::size_t threads_count;
-    std::size_t sessions_count;
 };
 
 std::istream &
-operator>>(std::istream & in, Configuration::Verify & verify);
+operator>>(std::istream & in, SessionConfiguration::Verify & verify);
 
 std::ostream &
-operator<<(std::ostream & out, const Configuration::Verify & verify);
+operator<<(std::ostream & out, const SessionConfiguration::Verify & verify);
 
 std::ostream &
-operator<<(std::ostream & out, const Configuration::Mode & mode);
+operator<<(std::ostream & out, const SessionConfiguration::Mode & mode);
 
 std::istream &
-operator>>(std::istream & in, Configuration::Direction & direction);
+operator>>(std::istream & in, SessionConfiguration::Direction & direction);
 
 std::ostream &
-operator<<(std::ostream & out, const Configuration::Direction & direction);
+operator<<(std::ostream & out, const SessionConfiguration::Direction & direction);
 
 std::ostream &
-operator<<(std::ostream & out, const Configuration & configuration);
+operator<<(std::ostream & out, const SessionConfiguration & configuration);
 
 std::istream &
-operator>>(std::istream & in, Configuration::ShutdownPolicy & policy);
+operator>>(std::istream & in, SessionConfiguration::ShutdownPolicy & policy);
 
 std::ostream &
-operator<<(std::ostream & out, const Configuration::ShutdownPolicy & policy);
+operator<<(std::ostream & out, const SessionConfiguration::ShutdownPolicy & policy);
 
 std::istream &
-operator>>(std::istream & in, Configuration::Protocol & protocol);
+operator>>(std::istream & in, SessionConfiguration::Protocol & protocol);
 
 std::ostream &
-operator<<(std::ostream & out, const Configuration::Protocol & protocol);
+operator<<(std::ostream & out, const SessionConfiguration::Protocol & protocol);
+
+using SessionConfigurations = std::vector<SessionConfiguration>;
 
 } // namespace net_tester
 } // namespace enyx

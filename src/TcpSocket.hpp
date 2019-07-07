@@ -28,7 +28,7 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/system/error_code.hpp>
 
-#include "Configuration.hpp"
+#include "SessionConfiguration.hpp"
 #include "Socket.hpp"
 
 namespace enyx {
@@ -43,7 +43,7 @@ public:
 public:
     explicit
     TcpSocket(boost::asio::io_service & io_service,
-              const Configuration & configuration);
+              const SessionConfiguration & configuration);
 
     template<typename MutableBufferSequence, typename ReadHandler>
     void
@@ -67,10 +67,10 @@ public:
 
 private:
     void
-    connect(const Configuration & configuration);
+    connect(const SessionConfiguration & configuration);
 
     void
-    listen(const Configuration & configuration,
+    listen(const SessionConfiguration & configuration,
            const boost::posix_time::time_duration & timeout);
 
 private:

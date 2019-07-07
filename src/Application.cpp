@@ -44,10 +44,10 @@ using SessionPtr = std::unique_ptr<Session>;
 
 SessionPtr
 create_session(boost::asio::io_service & io_service,
-               const Configuration & configuration)
+               const SessionConfiguration & configuration)
 {
     SessionPtr session;
-    if (configuration.protocol == Configuration::TCP)
+    if (configuration.protocol == SessionConfiguration::TCP)
         session.reset(new TcpSession{io_service, configuration});
     else
         session.reset(new UdpSession{io_service, configuration});
@@ -60,12 +60,12 @@ create_session(boost::asio::io_service & io_service,
 namespace Application {
 
 void
-run(const Configuration & configuration)
+run(const ApplicationConfiguration & configuration)
 {
-    boost::asio::io_service io_service{int(configuration.threads_count)};
+    boost::asio::io_service io_service(configuration.threads_count);
 
     std::vector<SessionPtr> sessions;
-    for (auto i = 0ULL; i != configuration.sessions_count; ++i)
+    for (auto const& configuration : configuration.session_configurations)
         sessions.push_back(create_session(io_service, configuration));
 
     for (auto & session : sessions)

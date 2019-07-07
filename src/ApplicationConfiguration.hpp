@@ -24,20 +24,18 @@
 
 #pragma once
 
-#include <vector>
+#include <cstdint>
 
-#include "ApplicationConfiguration.hpp"
+#include "SessionConfiguration.hpp"
 
 namespace enyx {
 namespace net_tester {
 
-namespace Application {
-
-void
-run(const ApplicationConfiguration & configuration);
-
-} // namespace Application
+struct ApplicationConfiguration
+{
+    std::size_t threads_count;
+    SessionConfigurations session_configurations;
+};
 
 } // namespace net_tester
 } // namespace enyx
-
