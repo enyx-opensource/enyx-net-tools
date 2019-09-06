@@ -27,6 +27,7 @@ include_directories(${Boost_INCLUDE_DIR})
 link_directories(${Boost_LIBRARY_DIR})
 
 add_subdirectory(src)
+add_subdirectory(doc)
 
 enable_testing()
 add_subdirectory(tests)

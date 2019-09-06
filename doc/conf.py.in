@@ -1,0 +1,33 @@
+import sphinx_rtd_theme
+
+extensions = [
+    'sphinx_rtd_theme',
+]
+
+source_suffix = '.rst'
+project = '@CMAKE_PROJECT_NAME@'
+version = '@CMAKE_PROJECT_VERSION@'
+author = u'Enyx'
+
+default_role = 'any'
+pygments_style = 'sphinx'
+highlight_language = 'guess'
+
+man_pages = [
+    ('man/1/enyx-net-tester',
+     'enyx-net-tester',
+     'Network benchmark tool',
+     '', 1),
+]
+
+master_doc = 'index'
+
+html_title = '{} - {} - Manual'.format(project, version)
+html_theme = 'sphinx_rtd_theme'
+html_logo = '@CMAKE_CURRENT_SOURCE_DIR@/logo-enyx.png'
+html_favicon = '@CMAKE_CURRENT_SOURCE_DIR@/favicon.ico'
+html_static_path = ['@CMAKE_CURRENT_SOURCE_DIR@/enyx.css']
+html_css_files = ['enyx.css']
+html_show_sourcelink = False
+html_show_sphinx = False
+html_show_copyright = False
