@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Multiple sessions handling
 ### Changed
 - Accept sessions parameters from response file
+- Rename nx-iperf to `enyx-net-tester`
 
 ## [0.1.7] - 2019-04-25
 ### Fixed

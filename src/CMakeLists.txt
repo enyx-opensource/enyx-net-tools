@@ -1,4 +1,4 @@
-add_executable(nx-iperf
+add_executable(enyx-net-tester
     main.cpp
     CacheLine.hpp
     HandlerAllocator.hpp
@@ -32,11 +32,11 @@ add_executable(nx-iperf
     TcpSession.hpp
     TcpSession.cpp)
 
-target_link_libraries(nx-iperf
+target_link_libraries(enyx-net-tester
     ${Boost_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT})
 
 install(TARGETS
-        nx-iperf
+        enyx-net-tester
     DESTINATION
         ${CMAKE_INSTALL_FULL_BINDIR})
