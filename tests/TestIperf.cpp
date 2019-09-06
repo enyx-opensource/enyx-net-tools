@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <vector>
 #include <iostream>
+#include <fstream>
 
 #include <boost/test/unit_test.hpp>
 #include <boost/process.hpp>
@@ -39,16 +40,15 @@ struct TcpFixture
         requested_size_ = requested_size;
         direction_ = direction;
 
-        std::ostringstream iperf_server_cmd;
-        iperf_server_cmd << IPERF_BINARY_PATH
-                         << " --listen=" << endpoint_.address()
-                                         << ":"
-                                         << endpoint_.port()
-                         << " --size=" << requested_size_ << "B"
-                         << " --max-datagram-size=1B:32KiB"
-                         << " " << args;
+        std::ofstream{"iperf-cmd", std::ofstream::trunc}
+                << " --listen=" << endpoint_.address()
+                                << ":"
+                                << endpoint_.port()
+                << " --size=" << requested_size_ << "B"
+                << " --max-datagram-size=1B:32KiB"
+                << " " << args;
 
-        iperf_ = p::child{iperf_server_cmd.str(),
+        iperf_ = p::child{IPERF_BINARY_PATH " --configuration-file=iperf-cmd",
                           p::std_in < p::null,
                           p::std_out > iperf_server_stdout_,
                           p::std_err > stderr,
@@ -65,15 +65,14 @@ struct TcpFixture
     {
         requested_size_ = requested_size;
 
-        std::ostringstream iperf_client_cmd;
-        iperf_client_cmd << IPERF_BINARY_PATH
-                         << " --connect=127.0.0.1:0:"
-                         << endpoint_.address() << ":" << endpoint_.port()
-                         << " --size=" << requested_size_ << "B"
-                         << " --max-datagram-size=1B:32KiB"
-                         << " " << args;
+        std::ofstream{"iperf-cmd", std::ofstream::trunc}
+                << " --connect=127.0.0.1:0:"
+                << endpoint_.address() << ":" << endpoint_.port()
+                << " --size=" << requested_size_ << "B"
+                << " --max-datagram-size=1B:32KiB"
+                << " " << args;
 
-        iperf_ = p::child{iperf_client_cmd.str(),
+        iperf_ = p::child{IPERF_BINARY_PATH " --configuration-file=iperf-cmd",
                           p::std_in < p::null,
                           p::std_out > iperf_server_stdout_,
                           p::std_err > stderr,
