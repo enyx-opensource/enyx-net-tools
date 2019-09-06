@@ -24,8 +24,6 @@
 
 #include "Application.hpp"
 
-#include <pthread.h>
-
 #include <thread>
 #include <memory>
 #include <iostream>
