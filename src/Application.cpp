@@ -63,8 +63,8 @@ run(const ApplicationConfiguration & configuration)
     boost::asio::io_service io_service(configuration.threads_count);
 
     std::vector<SessionPtr> sessions;
-    for (auto const& configuration : configuration.session_configurations)
-        sessions.push_back(create_session(io_service, configuration));
+    for (auto const& c: configuration.session_configurations)
+        sessions.push_back(create_session(io_service, c));
 
     for (auto & session : sessions)
         session->async_run();
