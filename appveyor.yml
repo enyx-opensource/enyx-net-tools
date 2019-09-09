@@ -4,7 +4,7 @@ platform:
     - x64
 
 environment:
-    BOOST_ROOT: C:/Libraries/boost_1_67_0
+    BOOST_ROOT: C:/Libraries/boost_1_69_0
     CTEST_OUTPUT_ON_FAILURE: 1
 
 configuration: Release

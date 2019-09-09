@@ -1,4 +1,4 @@
-sudo: false
+dist: bionic
 
 os:
     - linux
@@ -9,19 +9,15 @@ language:
 env:
     - CTEST_OUTPUT_ON_FAILURE=1
 
+before_install:
+    - sudo add-apt-repository ppa:mhier/libboost-latest -y
+    - sudo apt-get update
+    - sudo apt-get install -y libboost1.70-dev
+    - which python3
 
 script:
     - mkdir build && cd build
     - cmake ..
     - make -j`nproc`
     - ctest
-
-addons:
-    apt:
-        update: true
-        sources:
-            - sourceline: 'ppa:mhier/libboost-latest'
-        packages:
-            - cmake
-            - boost1.67
 
