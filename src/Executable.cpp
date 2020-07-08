@@ -25,6 +25,7 @@
 #include "Executable.hpp"
 
 #include <stdexcept>
+#include <iostream>
 #include <iterator>
 #include <sstream>
 #include <fstream>
@@ -99,6 +100,23 @@ fill_configuration(SessionConfiguration & c,
 
     fill_configuration(c, options, argv);
 }
+
+SessionConfigurations
+fill_configuration(SessionConfiguration & c,
+                   po::options_description const& file_all,
+                   std::istream & file)
+{
+    SessionConfigurations configurations;
+
+    for (std::string line; std::getline(file, line); )
+    {
+        fill_configuration(c, file_all, line);
+        configurations.emplace_back(std::move(c));
+    }
+
+    return configurations;
+}
+
 
 ApplicationConfiguration
 parse(int argc, char ** argv)
@@ -182,17 +200,12 @@ parse(int argc, char ** argv)
             .add(file_tcp_optional);
 
     std::string file;
-    po::options_description cmd_required{"Required arguments"};
-    cmd_required.add_options()
-        ("configuration-file,c",
-            po::value<std::string>(&file),
-            "A file with one session configuration per line\n");
-
-    po::positional_options_description cmd_positions{};
-    cmd_positions.add("configuration-file", 1);
-
     po::options_description cmd_optional{"Optional arguments"};
     cmd_optional.add_options()
+        ("configuration-file,c",
+            po::value<std::string>(&file)
+                ->default_value("-"),
+            "A file with one session configuration per line\n")
         ("threads-count,x",
             po::value<std::size_t>(&app_configuration.threads_count)
                 ->default_value(std::thread::hardware_concurrency()),
@@ -201,13 +214,11 @@ parse(int argc, char ** argv)
             "Print the command lines arguments\n");
 
     po::options_description cmd_all{"COMMAND LINE OPTIONS"};
-    cmd_all.add(cmd_required)
-           .add(cmd_optional);
+    cmd_all.add(cmd_optional);
 
     po::variables_map args;
     auto cmd_parser = po::command_line_parser(argc, argv)
             .options(cmd_all)
-            .positional(cmd_positions)
             .run();
     po::store(cmd_parser, args);
     po::notify(args);
@@ -226,12 +237,19 @@ parse(int argc, char ** argv)
     if (args["threads-count"].as<std::size_t>() == 0)
         throw std::runtime_error{"--threads-count can't be equal to 0"};
 
-    std::ifstream command_line_file{file};
-    for (std::string line; std::getline(command_line_file, line); )
+    SessionConfigurations session_configurations;
+
+    if (file == "-")
     {
-        fill_configuration(c, file_all, line);
-        app_configuration.session_configurations.emplace_back(std::move(c));
+        session_configurations = fill_configuration(c, file_all, std::cin);
     }
+    else
+    {
+        std::ifstream response_file{file};
+        session_configurations = fill_configuration(c, file_all, response_file);
+    }
+
+    app_configuration.session_configurations = session_configurations;
 
     return app_configuration;
 }

@@ -24,6 +24,8 @@ Options
 .. option:: --configuration-file <FILE>
 
    The response file containg the session(s) parameters.
+   By default, the session(s) parameters are read from stdin.
+
    Each line of the response file corresponds to a session.
 
    example::
