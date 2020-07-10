@@ -62,7 +62,7 @@ Session::Session(boost::asio::io_service & io_service,
 }
 
 void
-Session::async_run()
+Session::on_init()
 {
     statistics_.start_date = pt::microsec_clock::universal_time();
 

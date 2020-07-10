@@ -25,6 +25,7 @@
 #include "TcpSession.hpp"
 
 #include <iostream>
+#include <functional>
 
 #include <boost/bind.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -42,7 +43,8 @@ namespace pt = boost::posix_time;
 TcpSession::TcpSession(boost::asio::io_service & io_service,
                        const SessionConfiguration & configuration)
     : Session(io_service, configuration),
-      socket_(io_service, configuration),
+      socket_(io_service, configuration,
+              std::bind(&TcpSession::on_init, this)),
       send_handler_memory_(),
       receive_handler_memory_()
 { }

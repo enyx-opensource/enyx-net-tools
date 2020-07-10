@@ -24,6 +24,9 @@
 
 #pragma once
 
+#include <memory>
+#include <iostream>
+
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/system/error_code.hpp>
@@ -38,12 +41,29 @@ class TcpSocket : public Socket
 {
 public:
     using socket_type = boost::asio::ip::tcp::socket;
+    using acceptor_type = boost::asio::ip::tcp::acceptor;
     using protocol_type = socket_type::protocol_type;
 
 public:
+    template<typename OnConnectHandler>
     explicit
     TcpSocket(boost::asio::io_service & io_service,
-              const SessionConfiguration & configuration);
+              const SessionConfiguration & configuration,
+              OnConnectHandler on_connect)
+        : Socket(io_service),
+          socket_(io_service_)
+    {
+        switch (configuration.mode)
+        {
+            default:
+            case SessionConfiguration::CLIENT:
+                connect(configuration, on_connect);
+                break;
+            case SessionConfiguration::SERVER:
+                listen(configuration, on_connect);
+                break;
+        }
+    }
 
     template<typename MutableBufferSequence, typename ReadHandler>
     void
@@ -66,12 +86,63 @@ public:
     close();
 
 private:
+    template<typename OnConnectHandler>
     void
-    connect(const SessionConfiguration & configuration);
+    connect(const SessionConfiguration & configuration,
+            OnConnectHandler on_connect)
+    {
+        const auto e = resolve<protocol_type>(configuration.endpoint);
 
+        socket_.open(e.first.protocol());
+        socket_type::reuse_address reuse_address(true);
+        socket_.set_option(reuse_address);
+        socket_.bind(e.first);
+        setup_windows(configuration, socket_);
+
+        auto handler = [this, on_connect]
+                (const boost::system::error_code & failure) {
+            std::cout << "Connected to '" << socket_.remote_endpoint()
+                      << "' from '" << socket_.local_endpoint()
+                      << "'" << std::endl;
+
+            on_connect();
+        };
+
+        socket_.async_connect(e.second, std::move(handler));
+
+        std::cout << "Connecting to " << e.second << std::endl;
+    }
+
+    template<typename OnConnectHandler>
     void
     listen(const SessionConfiguration & configuration,
-           const boost::posix_time::time_duration & timeout);
+           OnConnectHandler on_connect)
+    {
+        const auto e = resolve<protocol_type>(configuration.endpoint);
+
+        // Schedule an asynchronous accept.
+        auto a = std::make_shared<acceptor_type>(socket_.get_io_service(),
+                                                 e.second.protocol());
+        socket_type::reuse_address reuse_address(true);
+        a->set_option(reuse_address);
+        setup_windows(configuration, *a);
+        a->bind(e.second);
+        a->listen();
+
+        // Asynchronously Wait for a client to connect.
+        auto handler = [this, a, on_connect]
+                (const boost::system::error_code & f) {
+            std::cout << "Connected to '" << socket_.remote_endpoint()
+                      << "' from '" << socket_.local_endpoint()
+                      << "'" << std::endl;
+
+            on_connect();
+        };
+
+        a->async_accept(socket_, std::move(handler));
+
+        std::cout << "Waiting for client to connect" << std::endl;
+    }
 
 private:
     socket_type socket_;

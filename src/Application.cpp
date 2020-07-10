@@ -60,14 +60,15 @@ namespace Application {
 void
 run(const ApplicationConfiguration & configuration)
 {
+    std::cout << "Starting.." << std::endl;
+
     boost::asio::io_service io_service(configuration.threads_count);
 
     std::vector<SessionPtr> sessions;
     for (auto const& c: configuration.session_configurations)
         sessions.push_back(create_session(io_service, c));
 
-    for (auto & session : sessions)
-        session->async_run();
+    std::cout << "Started." << std::endl;
 
     std::vector<std::thread> threads;
     for (auto i = 0ULL; i != configuration.threads_count; ++i)

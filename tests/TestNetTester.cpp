@@ -119,7 +119,7 @@ struct TcpFixture
 
     void
     on_net_tester_output_receive(const boost::system::error_code & failure,
-                            std::size_t bytes_received)
+                                 std::size_t bytes_received)
     {
         if (! failure)
         {
@@ -132,7 +132,7 @@ struct TcpFixture
             if (! line.empty())
                 std::cout << "nx-net_tester: " << line << std::endl;
 
-            if (line.find("Waiting") == 0 && ! peer_socket_.is_open())
+            if (line.find("Started") == 0 && ! peer_socket_.is_open())
                 peer_socket_.async_connect(endpoint_,
                                            boost::bind(&TcpFixture::on_peer_connect, this, _1));
 
@@ -442,7 +442,7 @@ struct UdpFixture
 
     void
     on_net_tester_output_receive(const boost::system::error_code & failure,
-                            std::size_t bytes_received)
+                                 std::size_t bytes_received)
     {
         if (! failure)
         {

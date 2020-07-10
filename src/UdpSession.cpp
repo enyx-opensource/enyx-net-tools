@@ -50,7 +50,9 @@ UdpSession::UdpSession(boost::asio::io_service & io_service,
       random_generator_(std::random_device{}()),
       distribution_{configuration_.packet_size.low(),
                     configuration_.packet_size.high()}
-{ }
+{
+    on_init();
+}
 
 void
 UdpSession::async_receive(std::size_t slice_remaining_size)

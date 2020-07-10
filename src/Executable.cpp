@@ -261,7 +261,6 @@ namespace Executable {
 void
 run(int argc, char** argv)
 {
-    std::cout << "Starting.." << std::endl;
     Application::run(parse(argc, argv));
 }
 

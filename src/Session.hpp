@@ -47,9 +47,6 @@ public:
             const SessionConfiguration & configuration);
 
     void
-    async_run();
-
-    void
     finalize();
 
 private:
@@ -69,6 +66,9 @@ protected:
 
     virtual void
     finish_receive();
+
+    void
+    on_init();
 
     void
     on_receive_complete();
