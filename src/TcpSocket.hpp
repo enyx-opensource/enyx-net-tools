@@ -60,7 +60,7 @@ public:
                 connect(configuration, on_connect);
                 break;
             case SessionConfiguration::SERVER:
-                listen(configuration, on_connect);
+                listen(configuration, io_service, on_connect);
                 break;
         }
     }
@@ -116,12 +116,13 @@ private:
     template<typename OnConnectHandler>
     void
     listen(const SessionConfiguration & configuration,
+           boost::asio::io_service & io_service,
            OnConnectHandler on_connect)
     {
         const auto e = resolve<protocol_type>(configuration.endpoint);
 
         // Schedule an asynchronous accept.
-        auto a = std::make_shared<acceptor_type>(socket_.get_io_service(),
+        auto a = std::make_shared<acceptor_type>(io_service,
                                                  e.second.protocol());
         socket_type::reuse_address reuse_address(true);
         a->set_option(reuse_address);
