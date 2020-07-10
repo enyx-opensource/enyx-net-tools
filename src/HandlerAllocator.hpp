@@ -58,7 +58,7 @@ private:
 };
 
 template<typename Handler>
-struct HandlerAllocator
+class HandlerAllocator
 {
     template<typename> friend class HandlerAllocator;
 
