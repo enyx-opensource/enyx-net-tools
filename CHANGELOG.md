@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- Typo on output 'bandwiDth' was missing one 'd'
+
 ## [1.1.1] - 2020-07-10
 ### Changed
 - Tcp client listen & connect become asynchronous

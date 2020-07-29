@@ -38,7 +38,7 @@ namespace pt = boost::posix_time;
 namespace {
 
 std::string
-compute_bandwith(Size bytes_count,
+compute_bandwidth(Size bytes_count,
                  const pt::time_duration & duration)
 {
     std::ostringstream out;
@@ -62,13 +62,13 @@ operator<<(std::ostream & out, const Statistics & statistics)
     return out << "started: " << statistics.start_date << "\n"
                << "received_bytes_count: "
                << statistics.received_bytes_count << "\n"
-               << "receive_bandwith: "
-               << compute_bandwith(statistics.received_bytes_count,
+               << "receive_bandwidth: "
+               << compute_bandwidth(statistics.received_bytes_count,
                                    statistics.receive_duration) << "\n"
                << "sent_bytes_count: "
                << statistics.sent_bytes_count << "\n"
                << "send_bandwidth: "
-               << compute_bandwith(statistics.sent_bytes_count,
+               << compute_bandwidth(statistics.sent_bytes_count,
                                    statistics.send_duration)
                << std::endl;
 }
