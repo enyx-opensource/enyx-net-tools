@@ -69,12 +69,18 @@ Session::on_init()
     if (configuration_.direction == SessionConfiguration::TX)
         finish_receive();
     else
+    {
+        receive_throttle_.reset();
         async_receive();
+    }
 
     if (configuration_.direction == SessionConfiguration::RX)
         finish_send();
     else
+    {
+        send_throttle_.reset();
         async_send();
+    }
 
     timeout_timer_.async_wait([this](boost::system::error_code const& failure) {
         if (failure)

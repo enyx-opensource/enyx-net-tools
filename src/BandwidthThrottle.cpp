@@ -16,6 +16,12 @@ BandwidthThrottle::BandwidthThrottle(boost::asio::io_service & io_service,
           next_slice_start_(std::chrono::steady_clock::now())
 { }
 
+void
+BandwidthThrottle::reset()
+{
+    next_slice_start_ = std::chrono::steady_clock::now();
+}
+
 std::chrono::steady_clock::duration
 BandwidthThrottle::to_slice_duration(std::size_t sampling_frequency)
 {

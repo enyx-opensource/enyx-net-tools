@@ -37,6 +37,9 @@ public:
                                        std::move(handler)));
     }
 
+    void
+    reset();
+
 private:
     static std::chrono::steady_clock::duration
     to_slice_duration(std::size_t sampling_frequency);
