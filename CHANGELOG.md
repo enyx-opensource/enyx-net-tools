@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [1.1.3] - 2020-07-31
 ### Fixed 
 - Bandwidth computation was depending on the connection time
 
