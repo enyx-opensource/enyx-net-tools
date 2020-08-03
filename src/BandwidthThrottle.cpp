@@ -26,7 +26,7 @@ std::chrono::steady_clock::duration
 BandwidthThrottle::to_slice_duration(std::size_t sampling_frequency)
 {
     assert(sampling_frequency && "is not 0");
-    return std::chrono::seconds(1) / sampling_frequency;
+    return std::chrono::nanoseconds(1000 * 1000 * 1000) / sampling_frequency;
 }
 
 std::size_t
