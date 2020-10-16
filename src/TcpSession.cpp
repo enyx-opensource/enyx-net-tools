@@ -102,6 +102,9 @@ void
 TcpSession::on_eof(const boost::system::error_code & failure,
                    std::size_t bytes_transferred)
 {
+    if (configuration_.shutdown_policy == SessionConfiguration::WAIT_FOR_PEER)
+        socket_.shutdown_send();
+
     if (failure == ao::error::eof)
         on_receive_complete();
     else if (failure)
@@ -153,8 +156,6 @@ TcpSession::finish_send()
 void
 TcpSession::finish()
 {
-    if (configuration_.shutdown_policy == SessionConfiguration::WAIT_FOR_PEER)
-        socket_.shutdown_send();
     socket_.close();
 }
 

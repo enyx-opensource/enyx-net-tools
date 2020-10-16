@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- Timeout computation
+- Operation Canceled error with `--shutdown-policy = send_complete`
+
 ## [1.1.4] - 2020-08-03
 ### Fixed
 - Bandwidth computation was wrong with a sampling != 1

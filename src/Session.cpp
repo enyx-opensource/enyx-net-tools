@@ -53,7 +53,9 @@ Session::Session(boost::asio::io_service & io_service,
       receive_buffer_(BUFFER_SIZE),
       receive_throttle_(io_service,
                         configuration.receive_bandwidth,
-                        configuration.bandwidth_sampling_frequency)
+                        configuration.bandwidth_sampling_frequency),
+      is_receive_complete_(),
+      is_send_complete_()
 {
     for (std::size_t i = 0, e = send_buffer_.size(); i != e; ++i)
         send_buffer_[i] = uint8_t(i);
@@ -82,7 +84,7 @@ Session::on_init()
         async_send();
     }
 
-    timeout_timer_.expires_from_now(estimate_test_duration(configuration));
+    timeout_timer_.expires_from_now(estimate_test_duration(configuration_));
     timeout_timer_.async_wait([this](boost::system::error_code const& failure) {
         if (failure)
             return;
@@ -156,7 +158,9 @@ Session::on_receive_complete()
 {
     std::cout << "Finished receiving" << std::endl;
 
-    if (configuration_.direction != SessionConfiguration::TX)
+    is_receive_complete_ = true;
+
+    if (is_send_complete_)
         on_finish();
 }
 
@@ -228,7 +232,9 @@ Session::on_send_complete()
 {
     std::cout << "Finished sending" << std::endl;
 
-    if (configuration_.direction == SessionConfiguration::TX)
+    is_send_complete_ = true;
+
+    if (is_receive_complete_)
         on_finish();
 }
 

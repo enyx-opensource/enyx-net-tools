@@ -115,6 +115,8 @@ protected:
     BandwidthThrottle send_throttle_;
     buffer_type receive_buffer_;
     BandwidthThrottle receive_throttle_;
+    bool is_receive_complete_;
+    bool is_send_complete_;
 };
 
 } // namespace net_tester
