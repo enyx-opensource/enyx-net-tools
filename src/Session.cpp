@@ -43,7 +43,7 @@ Session::Session(boost::asio::io_service & io_service,
                  const SessionConfiguration & configuration)
     : io_service_(io_service),
       configuration_(configuration),
-      timeout_timer_(io_service, estimate_test_duration(configuration)),
+      timeout_timer_(io_service),
       statistics_(),
       failure_(),
       send_buffer_(BUFFER_SIZE),
@@ -82,6 +82,7 @@ Session::on_init()
         async_send();
     }
 
+    timeout_timer_.expires_from_now(estimate_test_duration(configuration));
     timeout_timer_.async_wait([this](boost::system::error_code const& failure) {
         if (failure)
             return;
