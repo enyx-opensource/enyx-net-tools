@@ -101,16 +101,10 @@ private:
 
         auto handler = [this, on_connect]
                 (const boost::system::error_code & failure) {
-            std::cout << "Connected to '" << socket_.remote_endpoint()
-                      << "' from '" << socket_.local_endpoint()
-                      << "'" << std::endl;
-
             on_connect();
         };
 
         socket_.async_connect(e.second, std::move(handler));
-
-        std::cout << "Connecting to " << e.second << std::endl;
     }
 
     template<typename OnConnectHandler>
@@ -133,16 +127,10 @@ private:
         // Asynchronously Wait for a client to connect.
         auto handler = [this, a, on_connect]
                 (const boost::system::error_code & f) {
-            std::cout << "Connected to '" << socket_.remote_endpoint()
-                      << "' from '" << socket_.local_endpoint()
-                      << "'" << std::endl;
-
             on_connect();
         };
 
         a->async_accept(socket_, std::move(handler));
-
-        std::cout << "Waiting for client to connect" << std::endl;
     }
 
 private:

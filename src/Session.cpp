@@ -59,8 +59,6 @@ Session::Session(boost::asio::io_service & io_service,
 {
     for (std::size_t i = 0, e = send_buffer_.size(); i != e; ++i)
         send_buffer_[i] = uint8_t(i);
-
-    std::cout << configuration_ << std::endl;
 }
 
 void
@@ -114,10 +112,6 @@ Session::estimate_test_duration(const SessionConfiguration & configuration)
     if (duration_margin.is_special())
         duration_margin = duration / 10;
 
-    std::cout << "Estimated duration " << duration
-              << " (+" << duration_margin
-              << ")." << std::endl;
-
     return duration + duration_margin;
 }
 
@@ -156,8 +150,6 @@ Session::finish_receive()
 void
 Session::on_receive_complete()
 {
-    std::cout << "Finished receiving" << std::endl;
-
     is_receive_complete_ = true;
 
     if (is_send_complete_)
@@ -230,8 +222,6 @@ Session::finish_send()
 void
 Session::on_send_complete()
 {
-    std::cout << "Finished sending" << std::endl;
-
     is_send_complete_ = true;
 
     if (is_receive_complete_)

@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+## Removed
+- Mixed std:cout output from multiple threads
+
 ## [1.1.5] - 2020-10-16
 ### Fixed
 - Timeout computation

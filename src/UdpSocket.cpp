@@ -70,9 +70,6 @@ UdpSocket::connect(const SessionConfiguration & configuration)
 
     // Set the default destination address of this datagram socket.
     peer_endpoint_ = e.second;
-
-    std::cout << "Local '" << socket_.local_endpoint() << "' to remote '"
-              << peer_endpoint_ << "'" << std::endl;
 }
 
 void

@@ -130,7 +130,7 @@ struct TcpFixture
             }
 
             if (! line.empty())
-                std::cout << "nx-net_tester: " << line << std::endl;
+                std::cout << "enyx-net-tester: " << line << std::endl;
 
             if (line.find("Started") == 0 && ! peer_socket_.is_open())
                 peer_socket_.async_connect(endpoint_,
@@ -154,7 +154,7 @@ struct TcpFixture
         else
             async_read_rxtx_peer();
 
-        std::cout << "Connected to nx-net_tester" << std::endl;
+        std::cout << "Connected to enyx-net-tester" << std::endl;
     }
 
     void
