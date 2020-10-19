@@ -40,7 +40,7 @@ struct TcpFixture
         requested_size_ = requested_size;
         direction_ = direction;
 
-        std::ofstream{"net_tester-cmd", std::ofstream::trunc}
+        std::ofstream{"net-tester-cmd", std::ofstream::trunc}
                 << " --listen=" << endpoint_.address()
                                 << ":"
                                 << endpoint_.port()
@@ -49,13 +49,13 @@ struct TcpFixture
                 << " " << args;
 
         net_tester_ = p::child{NET_TESTER_BINARY_PATH 
-                               " --configuration-file=net_tester-cmd",
+                               " --configuration-file=net-tester-cmd",
                                p::std_in < p::null,
                                p::std_out > net_tester_server_stdout_,
                                p::std_err > stderr,
                                io_service_};
 
-        BOOST_TEST_CHECKPOINT("net_tester client started");
+        BOOST_TEST_CHECKPOINT("net-tester client started");
 
         async_read_net_tester_output();
     }
@@ -66,7 +66,7 @@ struct TcpFixture
     {
         requested_size_ = requested_size;
 
-        std::ofstream{"net_tester-cmd", std::ofstream::trunc}
+        std::ofstream{"net-tester-cmd", std::ofstream::trunc}
                 << " --connect=127.0.0.1:0:"
                 << endpoint_.address() << ":" << endpoint_.port()
                 << " --size=" << requested_size_ << "B"
@@ -80,7 +80,7 @@ struct TcpFixture
                                p::std_err > stderr,
                                io_service_};
 
-        BOOST_TEST_CHECKPOINT("net_tester client started");
+        BOOST_TEST_CHECKPOINT("net-tester client started");
 
         async_read_net_tester_output();
     }
@@ -143,7 +143,7 @@ struct TcpFixture
     void
     on_peer_connect(const boost::system::error_code & failure)
     {
-        BOOST_REQUIRE(! failure);
+        BOOST_REQUIRE_EQUAL(failure, boost::system::error_code{});
         if (direction_ == FROM_NET_TESTER)
         {
             peer_socket_.shutdown(peer_socket_.shutdown_send);
@@ -187,7 +187,7 @@ struct TcpFixture
     on_peer_rxtx_sent(const boost::system::error_code & failure,
                       std::size_t bytes_sent)
     {
-        BOOST_REQUIRE(! failure);
+        BOOST_REQUIRE_EQUAL(failure, boost::system::error_code{});
 
         BOOST_REQUIRE_LE(bytes_sent, requested_size_);
         requested_size_ -= bytes_sent;
@@ -237,7 +237,7 @@ struct TcpFixture
     on_peer_tx_sent(const boost::system::error_code & failure,
                     std::size_t bytes_sent)
     {
-        BOOST_REQUIRE(! failure);
+        BOOST_REQUIRE_EQUAL(failure, boost::system::error_code{});
 
         BOOST_REQUIRE_LE(bytes_sent, requested_size_);
         requested_size_ -= bytes_sent;
@@ -382,7 +382,7 @@ struct UdpFixture
     {
         requested_size_ = requested_size;
 
-        std::ofstream{"net_tester-cmd", std::ofstream::trunc}
+        std::ofstream{"net-tester-cmd", std::ofstream::trunc}
                          << " --connect="
                          << local_endpoint_.address() << ":"
                          << local_endpoint_.port() << ":"
@@ -392,13 +392,13 @@ struct UdpFixture
                          << " " << args;
 
         net_tester_ = p::child{NET_TESTER_BINARY_PATH
-                               " --configuration-file=net_tester-cmd",
+                               " --configuration-file=net-tester-cmd",
                                p::std_in < p::null,
                                p::std_out > net_tester_server_stdout_,
                                p::std_err > stderr,
                                io_service_};
 
-        BOOST_TEST_CHECKPOINT("net_tester client started");
+        BOOST_TEST_CHECKPOINT("net-tester client started");
 
         async_read_net_tester_output();
     }
@@ -470,7 +470,7 @@ struct UdpFixture
     on_peer_rxtx_receive(const boost::system::error_code & failure,
                          std::size_t bytes_received)
     {
-        BOOST_REQUIRE(! failure);
+        BOOST_REQUIRE_EQUAL(failure, boost::system::error_code{});
 
         peer_socket_.async_send(boost::asio::buffer(peer_buffer_, bytes_received),
                                 boost::bind(&UdpFixture::on_peer_rxtx_sent, this, _1, _2));
@@ -480,7 +480,7 @@ struct UdpFixture
     on_peer_rxtx_sent(const boost::system::error_code & failure,
                       std::size_t bytes_sent)
     {
-        BOOST_REQUIRE(! failure);
+        BOOST_REQUIRE_EQUAL(failure, boost::system::error_code{});
 
         BOOST_REQUIRE_LE(bytes_sent, requested_size_);
         requested_size_ -= bytes_sent;
@@ -500,7 +500,7 @@ struct UdpFixture
     on_peer_rx_receive(const boost::system::error_code & failure,
                        std::size_t bytes_received)
     {
-        BOOST_REQUIRE(! failure);
+        BOOST_REQUIRE_EQUAL(failure, boost::system::error_code{});
 
         BOOST_REQUIRE_LE(bytes_received, requested_size_);
         requested_size_ -= bytes_received;
@@ -522,7 +522,7 @@ struct UdpFixture
     on_peer_tx_sent(const boost::system::error_code & failure,
                     std::size_t bytes_sent)
     {
-        BOOST_REQUIRE(! failure);
+        BOOST_REQUIRE_EQUAL(failure, boost::system::error_code{});
 
         BOOST_REQUIRE_LE(bytes_sent, requested_size_);
         requested_size_ -= bytes_sent;
