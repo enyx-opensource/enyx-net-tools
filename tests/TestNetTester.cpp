@@ -75,7 +75,7 @@ struct TcpFixture
                 << " " << args;
 
         net_tester_ = p::child{NET_TESTER_BINARY_PATH
-                               " --configuration-file=net_tester-cmd",
+                               " --configuration-file=net-tester-cmd",
                                p::std_in < p::null,
                                p::std_out > net_tester_server_stdout_,
                                p::std_err > stderr,
