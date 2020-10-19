@@ -1,4 +1,4 @@
-#define BOOST_TEST_MODULE Iperf
+#define BOOST_TEST_MODULE NetTester
 
 #include <cstdint>
 #include <vector>
@@ -453,7 +453,7 @@ struct UdpFixture
             }
 
             if (! line.empty())
-                std::cout << "nx-net_tester: " << line << std::endl;
+                std::cout << "enyx-net-tester: " << line << std::endl;
 
             async_read_net_tester_output();
         }
