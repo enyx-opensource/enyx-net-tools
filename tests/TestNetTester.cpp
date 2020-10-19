@@ -29,7 +29,8 @@ struct TcpFixture
           net_tester_buffer_(),
           peer_buffer_(1024 * 1024),
           requested_size_(),
-          direction_()
+          direction_(),
+          wait_for_peer_connect_()
     { }
 
     void
@@ -48,7 +49,7 @@ struct TcpFixture
                 << " --max-datagram-size=1B:32KiB"
                 << " " << args;
 
-        net_tester_ = p::child{NET_TESTER_BINARY_PATH 
+        net_tester_ = p::child{NET_TESTER_BINARY_PATH
                                " --configuration-file=net-tester-cmd",
                                p::std_in < p::null,
                                p::std_out > net_tester_server_stdout_,
@@ -89,6 +90,7 @@ struct TcpFixture
     start_peer_server(Direction direction = BOTH)
     {
         direction_ = direction;
+        wait_for_peer_connect_ = true;
 
         peer_acceptor_.open(endpoint_.protocol());
         ip::tcp::acceptor::reuse_address reuse_address{true};
@@ -132,7 +134,7 @@ struct TcpFixture
             if (! line.empty())
                 std::cout << "enyx-net-tester: " << line << std::endl;
 
-            if (line.find("Started") == 0 && ! peer_socket_.is_open())
+            if (line.find("Started") == 0 && ! wait_for_peer_connect_)
                 peer_socket_.async_connect(endpoint_,
                                            boost::bind(&TcpFixture::on_peer_connect, this, _1));
 
@@ -272,6 +274,7 @@ struct TcpFixture
     std::vector<std::uint8_t> peer_buffer_;
     std::size_t requested_size_;
     Direction direction_;
+    bool wait_for_peer_connect_;
 };
 
 BOOST_FIXTURE_TEST_SUITE(ServerTcp, TcpFixture)
