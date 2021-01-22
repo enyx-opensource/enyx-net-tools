@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- Decrease per session buffer size to 128K
 
 ## [1.1.6] - 2020-10-19
 ## Removed

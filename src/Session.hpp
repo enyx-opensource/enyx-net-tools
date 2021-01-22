@@ -53,7 +53,7 @@ private:
     using buffer_type = std::vector<std::uint8_t>;
 
 protected:
-    enum { BUFFER_SIZE = 32 << 20 };
+    enum { BUFFER_SIZE = 128 << 10 };
 
 protected:
     virtual void
