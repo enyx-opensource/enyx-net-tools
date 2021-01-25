@@ -43,7 +43,11 @@ Session::Session(boost::asio::io_service & io_service,
                  const SessionConfiguration & configuration)
     : io_service_(io_service),
       configuration_(configuration),
+#ifdef SIGHUP
+      signals_(io_service, SIGHUP, SIGINT, SIGTERM),
+#else
       signals_(io_service, SIGINT, SIGTERM),
+#endif
       timeout_timer_(io_service),
       statistics_(),
       failure_(),
