@@ -31,6 +31,7 @@
 
 #include <boost/system/error_code.hpp>
 #include <boost/asio/deadline_timer.hpp>
+#include <boost/asio/signal_set.hpp>
 
 #include "SessionConfiguration.hpp"
 #include "BandwidthThrottle.hpp"
@@ -108,6 +109,7 @@ protected:
 protected:
     boost::asio::io_service & io_service_;
     SessionConfiguration configuration_;
+    boost::asio::signal_set signals_;
     boost::asio::deadline_timer timeout_timer_;
     Statistics statistics_;
     boost::system::error_code failure_;

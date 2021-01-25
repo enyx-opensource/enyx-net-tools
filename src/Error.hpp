@@ -15,6 +15,9 @@ enum Error
     checksum_failed = 3,
     test_timeout = 4,
     unexpected_data = 5,
+    user_interrupt = 6,
+    program_termination = 7,
+    unknown_signal = 8,
 };
 
 boost::system::error_code
