@@ -77,8 +77,16 @@ run(const ApplicationConfiguration & configuration)
     for (auto & thread : threads)
         thread.join();
 
-    for (auto & session : sessions)
-        session->finalize();
+    boost::system::error_code first_failure;
+    for (auto & session : sessions) {
+        boost::system::error_code failure = session->finalize();
+        if (failure && ! first_failure)
+            first_failure = failure;
+    }
+
+    if (first_failure)
+        throw boost::system::system_error(first_failure);
+
 }
 
 } // namespace Application

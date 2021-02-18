@@ -46,7 +46,7 @@ public:
     Session(boost::asio::io_service & io_service,
             const SessionConfiguration & configuration);
 
-    void
+    boost::system::error_code
     finalize();
 
 private:

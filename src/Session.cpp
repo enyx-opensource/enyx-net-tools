@@ -91,13 +91,13 @@ Session::on_init()
     });
 }
 
-void
+boost::system::error_code
 Session::finalize()
 {
     std::cout << statistics_ << std::endl;
+    std::cout << "status: " << failure_ << std::endl;
 
-    if (failure_)
-        throw boost::system::system_error(failure_);
+    return failure_;
 }
 
 pt::time_duration
