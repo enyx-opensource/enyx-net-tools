@@ -22,8 +22,6 @@
  * SOFTWARE.
  */
 
-#include "Range.hpp"
-
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
@@ -37,61 +35,55 @@ namespace net_tester {
 
 namespace {
 
-Range
+template<typename ValueType>
+Range<ValueType>
 parse_range(const std::string & s)
 {
-    boost::regex regex(R"(([^:]+)(?::(.+))?)");
+    boost::regex regex(R"(([^-]+)(?:-(.+))?)");
     boost::smatch m;
 
     if (! boost::regex_match(s, m, regex))
     {
         std::ostringstream error;
         error << "range '" << s
-              << "' doesn't match ([^:]+)(?::(.+))";
+              << "' doesn't match ([^-]+)(?:-(.+))";
         throw std::runtime_error(error.str());
     }
 
-    Range::ValueType low;
+    ValueType low;
     std::istringstream{std::string{m[1].first, m[1].second}} >> low;
     if (! m[2].matched)
-        return Range{low};
+        return Range<ValueType>{low};
 
-    Range::ValueType high;
+    ValueType high;
     std::istringstream{std::string{m[2].first, m[2].second}} >> high;
 
-    return Range{low, high};
+    return Range<ValueType>{low, high};
 }
 
 } // anonymous namespace
 
+template<typename ValueType>
 std::istream &
-operator>>(std::istream & in, Range & range)
+operator>>(std::istream & in, Range<ValueType> & range)
 {
-    std::istream::sentry sentry(in);
+    std::string s;
+    in >> s;
 
-    if (sentry)
-    {
-        std::string s;
-        in >> s;
-
-        range = parse_range(s);
-    }
+    range = parse_range<ValueType>(s);
 
     return in;
 }
 
 
+template<typename ValueType>
 std::ostream &
-operator<<(std::ostream & out, const Range & range)
+operator<<(std::ostream & out, const Range<ValueType> & range)
 {
-    std::ostream::sentry sentry(out);
-    if (sentry)
-    {
-        out << range.low();
+    out << range.low();
 
-        if (range.low() != range.high())
-            out << ":" << range.high();
-    }
+    if (range.low() != range.high())
+        out << "-" << range.high();
 
     return out;
 }

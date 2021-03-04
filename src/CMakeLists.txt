@@ -7,7 +7,6 @@ add_executable(enyx-net-tester
     Size.hpp
     Size.cpp
     Range.hpp
-    Range.cpp
     Socket.hpp
     Socket.cpp
     TcpSocket.hpp

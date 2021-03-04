@@ -54,7 +54,7 @@ struct SessionConfiguration
     std::uint64_t bandwidth_sampling_frequency;
     Size windows;
     Size size;
-    Range packet_size;
+    Range<Size> packet_size;
     boost::posix_time::time_duration duration_margin;
     ShutdownPolicy shutdown_policy;
     Protocol protocol;

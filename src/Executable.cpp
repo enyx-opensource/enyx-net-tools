@@ -178,11 +178,11 @@ parse(int argc, char ** argv)
     po::options_description file_udp_optional{"Udp related optional arguments"};
     file_udp_optional.add_options()
         ("max-datagram-size,D",
-            po::value<Range>(&c.packet_size)
-                ->default_value(Range{Size{(1 << 16) - 64}}),
+            po::value<Range<Size>>(&c.packet_size)
+                ->default_value(Range<Size>{Size{(1 << 16) - 64}}),
             "UDP and TCP packet maximum size. Accepted values:\n"
             "  - X The maximum size is equal to X\n"
-            "  - X:Y The maximum size is randomly chosen for each packet "
+            "  - X-Y The maximum size is randomly chosen for each packet "
             "between X & Y (inclusive)\n");
 
     po::options_description file_tcp_optional{"Tcp related optional arguments"};

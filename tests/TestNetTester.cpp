@@ -46,7 +46,7 @@ struct TcpFixture
                                 << ":"
                                 << endpoint_.port()
                 << " --size=" << requested_size_ << "B"
-                << " --max-datagram-size=1B:32KiB"
+                << " --max-datagram-size=1B-32KiB"
                 << " " << args;
 
         net_tester_ = p::child{NET_TESTER_BINARY_PATH
@@ -71,7 +71,7 @@ struct TcpFixture
                 << " --connect=127.0.0.1:0:"
                 << endpoint_.address() << ":" << endpoint_.port()
                 << " --size=" << requested_size_ << "B"
-                << " --max-datagram-size=1B:32KiB"
+                << " --max-datagram-size=1B-32KiB"
                 << " " << args;
 
         net_tester_ = p::child{NET_TESTER_BINARY_PATH

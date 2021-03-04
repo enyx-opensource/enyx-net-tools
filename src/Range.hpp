@@ -27,16 +27,12 @@
 #include <stdint.h>
 #include <iosfwd>
 
-#include "Size.hpp"
-
 namespace enyx {
 namespace net_tester {
 
+template<typename ValueType>
 class Range
 {
-public:
-    using ValueType = Size;
-
 public:
     Range(void) = default;
 
@@ -61,11 +57,16 @@ private:
     ValueType high_;
 };
 
+template<typename ValueType>
 std::istream &
-operator>>(std::istream & in, Range & range);
+operator>>(std::istream & in, Range<ValueType> & range);
 
+template<typename ValueType>
 std::ostream &
-operator<<(std::ostream & out, const Range & range);
+operator<<(std::ostream & out, const Range<ValueType> & range);
 
 } // namespace net_tester
 } // namespace enyx
+
+#include "Range.ipp"
+
