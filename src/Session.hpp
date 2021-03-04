@@ -68,7 +68,10 @@ protected:
     finish_receive();
 
     void
-    on_init();
+    start_transfer();
+
+    void
+    start_timer();
 
     void
     on_receive_complete();

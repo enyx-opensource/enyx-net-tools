@@ -43,11 +43,12 @@ namespace pt = boost::posix_time;
 TcpSession::TcpSession(boost::asio::io_service & io_service,
                        const SessionConfiguration & configuration)
     : Session(io_service, configuration),
-      socket_(io_service, configuration,
-              std::bind(&TcpSession::on_init, this)),
+      socket_(io_service, configuration, [this] { start_transfer(); }),
       send_handler_memory_(),
       receive_handler_memory_()
-{ }
+{
+    io_service.post([this] { start_timer(); } );
+}
 
 void
 TcpSession::async_receive(std::size_t slice_remaining_size)

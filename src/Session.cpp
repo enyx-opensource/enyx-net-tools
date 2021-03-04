@@ -62,7 +62,7 @@ Session::Session(boost::asio::io_service & io_service,
 }
 
 void
-Session::on_init()
+Session::start_transfer()
 {
     statistics_.start_date = pt::microsec_clock::universal_time();
 
@@ -81,7 +81,11 @@ Session::on_init()
         send_throttle_.reset();
         async_send();
     }
+}
 
+void
+Session::start_timer()
+{
     timeout_timer_.expires_from_now(estimate_test_duration(configuration_));
     timeout_timer_.async_wait([this](boost::system::error_code const& failure) {
         if (failure)

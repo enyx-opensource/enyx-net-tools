@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- The timeout timer will only start after all sessions have been configured
+
 ## [1.1.7] - 2021-01-22
 ### Changed
 - Decrease per session buffer size to 128K

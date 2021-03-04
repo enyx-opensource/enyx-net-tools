@@ -51,7 +51,7 @@ UdpSession::UdpSession(boost::asio::io_service & io_service,
       distribution_{configuration_.packet_size.low(),
                     configuration_.packet_size.high()}
 {
-    on_init();
+    io_service.post([this] { start_timer(); start_transfer(); });
 }
 
 void
