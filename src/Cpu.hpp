@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2016 EnyxSA
+ * Copyright (c) 2021 EnyxSA
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,18 +25,27 @@
 #pragma once
 
 #include <cstdint>
+#include <vector>
 
-#include "SessionConfiguration.hpp"
-#include "Cpu.hpp"
+#include "Ranges.hpp"
 
 namespace enyx {
 namespace net_tester {
 
-struct ApplicationConfiguration
+using CpuCoreId = std::uint32_t;
+
+using CpuCoreIdRanges = Ranges<CpuCoreId>;
+
+using CpuCoreIds = std::vector<CpuCoreId>;
+
+inline CpuCoreIds
+to_cpu_core_list(CpuCoreIdRanges const& cpu_core_id_ranges)
 {
-    CpuCoreIdRanges cpus;
-    SessionConfigurations session_configurations;
-};
+    return as_sequence(cpu_core_id_ranges);
+}
+
+void
+pin_current_thread_to_cpu_core(CpuCoreId id);
 
 } // namespace net_tester
 } // namespace enyx

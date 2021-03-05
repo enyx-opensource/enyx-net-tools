@@ -22,63 +22,38 @@
  * SOFTWARE.
  */
 
-#include <stdexcept>
 #include <iostream>
+#include <string>
 #include <sstream>
-#include <iomanip>
-
-#include <boost/io/ios_state.hpp>
-#include <boost/regex.hpp>
 
 namespace enyx {
 namespace net_tester {
 
-namespace {
-
-template<typename ValueType>
-Range<ValueType>
-parse_range(const std::string & s)
-{
-    boost::regex regex(R"(([^-]+)(?:-(.+))?)");
-    boost::smatch m;
-
-    if (! boost::regex_match(s, m, regex))
-    {
-        std::ostringstream error;
-        error << "range '" << s
-              << "' doesn't match ([^-]+)(?:-(.+))";
-        throw std::runtime_error(error.str());
-    }
-
-    ValueType low;
-    std::istringstream{std::string{m[1].first, m[1].second}} >> low;
-    if (! m[2].matched)
-        return Range<ValueType>{low};
-
-    ValueType high;
-    std::istringstream{std::string{m[2].first, m[2].second}} >> high;
-
-    return Range<ValueType>{low, high};
-}
-
-} // anonymous namespace
-
-template<typename ValueType>
-std::istream &
-operator>>(std::istream & in, Range<ValueType> & range)
+template<typename Type>
+inline std::istream &
+operator>>(std::istream & in, Range<Type> & range)
 {
     std::string s;
     in >> s;
 
-    range = parse_range<ValueType>(s);
+    auto const offset = s.find('-');
+
+    Type low, high;
+    std::istringstream{s.substr(0, offset)} >> low;
+
+    if (offset == std::string::npos)
+        high = low;
+    else
+        std::istringstream{s.substr(offset + 1)} >> high;
+
+    range = Range<Type>{low, high};
 
     return in;
 }
 
-
-template<typename ValueType>
-std::ostream &
-operator<<(std::ostream & out, const Range<ValueType> & range)
+template<typename Type>
+inline std::ostream &
+operator<<(std::ostream & out, const Range<Type> & range)
 {
     out << range.low();
 
@@ -86,6 +61,18 @@ operator<<(std::ostream & out, const Range<ValueType> & range)
         out << "-" << range.high();
 
     return out;
+}
+
+template<typename Type>
+inline std::vector<Type>
+as_sequence(const Range<Type> & range)
+{
+    std::vector<Type> sequence;
+    for (auto i = range.low(), e = range.high(); i != e; ++i)
+        sequence.push_back(i);
+
+    sequence.push_back(range.high());
+    return sequence;
 }
 
 } // namespace net_tester

@@ -32,6 +32,7 @@
 #include <boost/asio/error.hpp>
 
 #include "Error.hpp"
+#include "Signal.hpp"
 
 namespace enyx {
 namespace net_tester {
@@ -236,7 +237,7 @@ void
 Session::abort(const boost::system::error_code & failure)
 {
     // Stop the whole application
-    io_service_.stop();
+    request_exit();
     failure_ = failure;
 }
 

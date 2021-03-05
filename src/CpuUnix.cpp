@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2016 EnyxSA
+ * Copyright (c) 2021 EnyxSA
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,21 +22,27 @@
  * SOFTWARE.
  */
 
-#pragma once
-
-#include <cstdint>
-
-#include "SessionConfiguration.hpp"
 #include "Cpu.hpp"
+
+#include <pthread.h>
+
+#include <thread>
+#include <system_error>
 
 namespace enyx {
 namespace net_tester {
 
-struct ApplicationConfiguration
+void
+pin_current_thread_to_cpu_core(CpuCoreId id)
 {
-    CpuCoreIdRanges cpus;
-    SessionConfigurations session_configurations;
-};
+    cpu_set_t set;
+    CPU_ZERO(&set);
+    CPU_SET(id, &set);
+
+    int failure = ::pthread_setaffinity_np(::pthread_self(), sizeof(set), &set);
+    if (failure)
+        throw std::system_error{failure, std::generic_category()};
+}
 
 } // namespace net_tester
 } // namespace enyx

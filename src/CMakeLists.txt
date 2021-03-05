@@ -1,12 +1,17 @@
 add_executable(enyx-net-tester
     main.cpp
+    Cpu.hpp
+    Cpu$<IF:$<PLATFORM_ID:Windows>,Win,Unix>.cpp
     CacheLine.hpp
     HandlerAllocator.hpp
     Error.hpp
     Error.cpp
     Size.hpp
     Size.cpp
+    Signal.hpp
+    Signal.cpp
     Range.hpp
+    Ranges.hpp
     Socket.hpp
     Socket.cpp
     TcpSocket.hpp

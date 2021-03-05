@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2016 EnyxSA
+ * Copyright (c) 2021 EnyxSA
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,21 +22,47 @@
  * SOFTWARE.
  */
 
-#pragma once
+#include "Signal.hpp"
 
-#include <cstdint>
-
-#include "SessionConfiguration.hpp"
-#include "Cpu.hpp"
+#include <csignal>
+#include <cstdlib>
 
 namespace enyx {
 namespace net_tester {
 
-struct ApplicationConfiguration
+namespace {
+
+volatile std::sig_atomic_t is_exit_requested_;
+
+void
+on_signal(int signal) noexcept
 {
-    CpuCoreIdRanges cpus;
-    SessionConfigurations session_configurations;
-};
+    if (is_exit_requested())
+        std::abort();
+
+    request_exit();
+}
+
+} // anonymous namespace
+
+void
+install_signal_handlers() noexcept
+{
+    std::signal(SIGINT, on_signal);
+    std::signal(SIGTERM, on_signal);
+}
+
+void
+request_exit() noexcept
+{
+    is_exit_requested_ = 1;
+}
+
+bool
+is_exit_requested() noexcept
+{
+    return is_exit_requested_ != 0;
+}
 
 } // namespace net_tester
 } // namespace enyx

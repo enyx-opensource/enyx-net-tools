@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [1.1.7] - 2021-01-22
 ### Changed
 - Decrease per session buffer size to 128K
+- Rework threading model to use an `io_service` per thread
 
 ## [1.1.6] - 2020-10-19
 ## Removed

@@ -58,7 +58,6 @@ struct SessionConfiguration
     boost::posix_time::time_duration duration_margin;
     ShutdownPolicy shutdown_policy;
     Protocol protocol;
-    std::size_t threads_count;
 };
 
 std::istream &

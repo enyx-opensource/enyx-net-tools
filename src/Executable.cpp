@@ -29,7 +29,6 @@
 #include <iterator>
 #include <sstream>
 #include <fstream>
-#include <thread>
 
 #include <boost/program_options.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -206,9 +205,8 @@ parse(int argc, char ** argv)
             po::value<std::string>(&file)
                 ->default_value("-"),
             "A file with one session configuration per line\n")
-        ("threads-count,x",
-            po::value<std::size_t>(&app_configuration.threads_count)
-                ->default_value(std::thread::hardware_concurrency()),
+        ("cpu-cores,x",
+            po::value<CpuCoreIdRanges>(&app_configuration.cpus),
             "Threads used to process network events\n")
         ("help,h",
             "Print the command lines arguments\n");
@@ -233,9 +231,6 @@ parse(int argc, char ** argv)
 
     if (! args.count("configuration-file"))
         throw std::runtime_error{"--configuration-file argument is required"};
-
-    if (args["threads-count"].as<std::size_t>() == 0)
-        throw std::runtime_error{"--threads-count can't be equal to 0"};
 
     SessionConfigurations session_configurations;
 

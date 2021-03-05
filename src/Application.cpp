@@ -25,6 +25,7 @@
 #include "Application.hpp"
 
 #include <thread>
+#include <vector>
 #include <memory>
 #include <iostream>
 
@@ -32,6 +33,7 @@
 
 #include "TcpSession.hpp"
 #include "UdpSession.hpp"
+#include "Signal.hpp"
 
 namespace enyx {
 namespace net_tester {
@@ -53,26 +55,105 @@ create_session(boost::asio::io_service & io_service,
     return session;
 }
 
+class Thread final
+{
+public:
+    Thread(boost::asio::io_service & io_service)
+        : io_service_(io_service)
+        , thread_([this] { run(); })
+    { }
+
+    Thread(boost::asio::io_service & io_service,
+           CpuCoreId core_id)
+        : io_service_(io_service)
+        , thread_([this, core_id] { run_pinned(core_id); })
+    { }
+
+    Thread(const Thread &) = delete;
+
+    Thread(Thread &&) = default;
+
+    void
+    join()
+    { thread_.join(); }
+
+private:
+    void
+    run()
+    {
+        // Loop until there is pending work and exit is not requested
+        while (! is_exit_requested() && ! io_service_.stopped())
+            io_service_.poll_one();
+    }
+
+    void
+    run_pinned(CpuCoreId core_id)
+    {
+        pin_current_thread_to_cpu_core(core_id);
+        run();
+    }
+
+private:
+    boost::asio::io_service & io_service_;
+    std::thread thread_;
+};
+
+using Threads = std::vector<Thread>;
+
+using IoService = std::unique_ptr<boost::asio::io_service>;
+
+using IoServices = std::vector<IoService>;
+
+std::size_t
+get_concurrency(CpuCoreIds const& core_ids)
+{
+    return core_ids.empty() ? 1 : core_ids.size();
 }
+
+} // anonymous namespace
 
 namespace Application {
 
 void
 run(const ApplicationConfiguration & configuration)
 {
+    install_signal_handlers();
+
     std::cout << "Starting.." << std::endl;
 
-    boost::asio::io_service io_service(configuration.threads_count);
+    auto const core_ids = to_cpu_core_list(configuration.cpus);
 
+    IoServices io_services;
+    for (std::size_t i = 0U, e = get_concurrency(core_ids); i != e; ++i)
+    {
+        // Create each io_service with a concurrency hint of 1
+        // indicating that it won't be accessed by more than 1 thread
+        IoService new_io_service{new boost::asio::io_service{1}};
+        io_services.push_back(std::move(new_io_service));
+    }
+
+    // Create all the sessions
     std::vector<SessionPtr> sessions;
-    for (auto const& c: configuration.session_configurations)
-        sessions.push_back(create_session(io_service, c));
+    std::size_t i = 0;
+    for (auto const& conf: configuration.session_configurations)
+    {
+        // Partition the sessions on the io_services using round robin
+        auto & io_service = *io_services[i ++ % io_services.size()];
+
+        sessions.push_back(create_session(io_service, conf));
+    }
+
+    // Create all the thread running the io_service reactor
+    Threads threads;
+    for (std::size_t i = 0U, e = io_services.size(); i != e; ++i)
+    {
+        if (i >= core_ids.size())
+            threads.emplace_back(*io_services[i]);
+        else
+            threads.emplace_back(*io_services[i], core_ids[i]);
+    }
 
     std::cout << "Started." << std::endl;
-
-    std::vector<std::thread> threads;
-    for (auto i = 0ULL; i != configuration.threads_count; ++i)
-        threads.emplace_back([&io_service] { io_service.run(); });
 
     for (auto & thread : threads)
         thread.join();

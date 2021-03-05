@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2016 EnyxSA
+ * Copyright (c) 2021 EnyxSA
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,19 +24,31 @@
 
 #pragma once
 
-#include <cstdint>
+#include <vector>
+#include <iosfwd>
 
-#include "SessionConfiguration.hpp"
-#include "Cpu.hpp"
+#include "Range.hpp"
 
 namespace enyx {
 namespace net_tester {
 
-struct ApplicationConfiguration
-{
-    CpuCoreIdRanges cpus;
-    SessionConfigurations session_configurations;
-};
+template<typename Type>
+using Ranges = std::vector<Range<Type>>;
+
+template<typename Type>
+std::istream &
+operator>>(std::istream & in, Ranges<Type> & ranges);
+
+template<typename Type>
+std::ostream &
+operator<<(std::ostream & out, const Ranges<Type> & ranges);
+
+template<typename Type>
+std::vector<Type>
+as_sequence(const Ranges<Type> & ranges);
 
 } // namespace net_tester
 } // namespace enyx
+
+#include "Ranges.ipp"
+

@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2016 EnyxSA
+ * Copyright (c) 2021 EnyxSA
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,19 +24,18 @@
 
 #pragma once
 
-#include <cstdint>
-
-#include "SessionConfiguration.hpp"
-#include "Cpu.hpp"
-
 namespace enyx {
 namespace net_tester {
 
-struct ApplicationConfiguration
-{
-    CpuCoreIdRanges cpus;
-    SessionConfigurations session_configurations;
-};
+void
+install_signal_handlers() noexcept;
+
+void
+request_exit() noexcept;
+
+bool
+is_exit_requested() noexcept;
 
 } // namespace net_tester
 } // namespace enyx
+

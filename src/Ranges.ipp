@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2018 EnyxSA
+ * Copyright (c) 2021 EnyxSA
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,58 +22,68 @@
  * SOFTWARE.
  */
 
-#pragma once
-
-#include <stdint.h>
-#include <iosfwd>
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <algorithm>
 
 namespace enyx {
 namespace net_tester {
 
 template<typename Type>
-class Range
+inline std::istream &
+operator>>(std::istream & in, Ranges<Type> & ranges)
 {
-public:
-    using ValueType = Type;
+    ranges.clear();
+    for (std::string token; std::getline(in, token, ','); )
+    {
+        Range<Type> range;
+        std::istringstream{token} >> range;
+        ranges.push_back(range);
+    }
 
-public:
-    Range(void) = default;
-
-    Range(const ValueType & value)
-        : low_(value), high_(value)
-    { }
-
-    Range(const ValueType & low, const ValueType & high)
-        : low_(low), high_(high)
-    { }
-
-    ValueType
-    low() const
-    { return low_; }
-
-    ValueType
-    high() const
-    { return high_; }
-
-private:
-    ValueType low_;
-    ValueType high_;
-};
+    return in;
+}
 
 template<typename Type>
-std::istream &
-operator>>(std::istream & in, Range<Type> & range);
+inline std::ostream &
+operator<<(std::ostream & out, const Ranges<Type> & ranges)
+{
+    bool first = true;
+    for (auto const& range : ranges)
+    {
+        if (first)
+        {
+            out << ", ";
+            first = false;
+        }
+
+        out << range;
+    }
+
+    return out;
+}
 
 template<typename Type>
-std::ostream &
-operator<<(std::ostream & out, const Range<Type> & range);
+inline std::vector<Type>
+as_sequence(const Ranges<Type> & ranges)
+{
+    std::vector<Type> sequence;
+    for (auto const& range : ranges)
+    {
+        auto const partial_sequence = as_sequence(range);
+        sequence.insert(sequence.end(),
+                        partial_sequence.begin(),
+                        partial_sequence.end());
+    }
 
-template<typename Type>
-std::vector<Type>
-as_sequence(const Range<Type> & range);
+    // Remove duplicate
+    sequence.erase(std::unique(sequence.begin(), sequence.end()),
+                   sequence.end());
+
+    return sequence;
+}
 
 } // namespace net_tester
 } // namespace enyx
-
-#include "Range.ipp"
 
