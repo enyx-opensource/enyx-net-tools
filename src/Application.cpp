@@ -26,6 +26,7 @@
 
 #include <thread>
 #include <vector>
+#include <list>
 #include <memory>
 #include <iostream>
 
@@ -71,7 +72,7 @@ public:
 
     Thread(const Thread &) = delete;
 
-    Thread(Thread &&) = default;
+    Thread(Thread &&) = delete;
 
     void
     join()
@@ -98,11 +99,11 @@ private:
     std::thread thread_;
 };
 
-using Threads = std::vector<Thread>;
+using Threads = std::list<Thread>;
 
-using IoService = std::unique_ptr<boost::asio::io_service>;
+using IoServicePtr = std::unique_ptr<boost::asio::io_service>;
 
-using IoServices = std::vector<IoService>;
+using IoServices = std::vector<IoServicePtr>;
 
 std::size_t
 get_concurrency(CpuCoreIds const& core_ids)
@@ -128,7 +129,7 @@ run(const ApplicationConfiguration & configuration)
     {
         // Create each io_service with a concurrency hint of 1
         // indicating that it won't be accessed by more than 1 thread
-        IoService new_io_service{new boost::asio::io_service{1}};
+        IoServicePtr new_io_service{new boost::asio::io_service{1}};
         io_services.push_back(std::move(new_io_service));
     }
 
