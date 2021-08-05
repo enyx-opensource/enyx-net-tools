@@ -34,6 +34,12 @@
 #include "SessionConfiguration.hpp"
 #include "Socket.hpp"
 
+#ifdef __linux__
+#   include <sys/socket.h>
+#   include <netinet/in.h>
+#   include <netinet/tcp.h>
+#endif
+
 namespace enyx {
 namespace net_tester {
 
@@ -69,6 +75,15 @@ public:
     void
     async_receive(const MutableBufferSequence & buffers, ReadHandler handler)
     {
+#ifdef __linux__
+        int const flag = 1;
+        int failure = ::setsockopt(socket_.native_handle(),
+                                   IPPROTO_TCP, TCP_QUICKACK,
+                                   &flag, sizeof(flag));
+        if (failure)
+            throw std::system_error{errno, std::generic_category(),
+                                    "Failed to set TCP_QUICKACK"};
+#endif
         socket_.async_receive(buffers, handler);
     }
 
