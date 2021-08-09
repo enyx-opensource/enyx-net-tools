@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Changed
 - The timeout timer will only start after all sessions have been configured
+### Fixed
+- Handling of `--cpu-cores` argument only considered the first range provided
 
 ## [1.1.7] - 2021-01-22
 ### Changed

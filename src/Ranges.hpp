@@ -33,7 +33,10 @@ namespace enyx {
 namespace net_tester {
 
 template<typename Type>
-using Ranges = std::vector<Range<Type>>;
+struct Ranges
+{
+    std::vector<Range<Type>> value;
+};
 
 template<typename Type>
 std::istream &

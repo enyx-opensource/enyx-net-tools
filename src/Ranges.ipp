@@ -34,12 +34,16 @@ template<typename Type>
 inline std::istream &
 operator>>(std::istream & in, Ranges<Type> & ranges)
 {
-    ranges.clear();
-    for (std::string token; std::getline(in, token, ','); )
+    std::string s;
+    in >> s;
+    std::istringstream st{s};
+
+    ranges.value.clear();
+    for (std::string token; std::getline(st, token, ','); )
     {
         Range<Type> range;
         std::istringstream{token} >> range;
-        ranges.push_back(range);
+        ranges.value.push_back(range);
     }
 
     return in;
@@ -50,7 +54,7 @@ inline std::ostream &
 operator<<(std::ostream & out, const Ranges<Type> & ranges)
 {
     bool first = true;
-    for (auto const& range : ranges)
+    for (auto const& range : ranges.value)
     {
         if (first)
         {
@@ -69,7 +73,7 @@ inline std::vector<Type>
 as_sequence(const Ranges<Type> & ranges)
 {
     std::vector<Type> sequence;
-    for (auto const& range : ranges)
+    for (auto const& range : ranges.value)
     {
         auto const partial_sequence = as_sequence(range);
         sequence.insert(sequence.end(),
