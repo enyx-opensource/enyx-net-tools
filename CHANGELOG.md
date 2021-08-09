@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [1.1.8] - 2021-08-09
 ### Changed
 - The timeout timer will only start after all sessions have been configured
 ### Fixed
