@@ -30,6 +30,9 @@ struct category : boost::system::error_category
         case error::checksum_failed: return "Checksum failed";
         case error::test_timeout: return "Test timeout";
         case error::unexpected_data: return "Unexpected data";
+        case error::user_interrupt: return "User Interrupt";
+        case error::program_termination: return "Program termination";
+        case error::unknown_signal: return "Unknown signal";
         default: return "Unknown error";
         }
     }

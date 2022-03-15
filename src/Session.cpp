@@ -44,6 +44,11 @@ Session::Session(boost::asio::io_service & io_service,
                  const SessionConfiguration & configuration)
     : io_service_(io_service),
       configuration_(configuration),
+#ifdef SIGHUP
+      signals_(io_service, SIGHUP, SIGINT, SIGTERM),
+#else
+      signals_(io_service, SIGINT, SIGTERM),
+#endif
       timeout_timer_(io_service),
       statistics_(),
       failure_(),
@@ -58,6 +63,27 @@ Session::Session(boost::asio::io_service & io_service,
       is_receive_complete_(),
       is_send_complete_()
 {
+    auto handler = [this] (const boost::system::error_code& error,
+                        int signal_number) {
+        if (error)
+            // Signal unregistered
+            return;
+
+        switch (signal_number) {
+        case SIGINT:
+            abort(error::user_interrupt);
+            break;
+        case SIGTERM:
+            abort(error::program_termination);
+            break;
+        default:
+            abort(error::unknown_signal);
+            break;
+        };
+    };
+
+    signals_.async_wait(handler);
+
     for (std::size_t i = 0, e = send_buffer_.size(); i != e; ++i)
         send_buffer_[i] = uint8_t(i);
 }
@@ -244,6 +270,7 @@ Session::abort(const boost::system::error_code & failure)
 void
 Session::on_finish()
 {
+    signals_.cancel();
     timeout_timer_.cancel();
     finish();
 }
