@@ -127,12 +127,13 @@ operator<<(std::ostream & out, const Size & size)
         const char ** units = unit_system == Size::SI ? units_si : units_iec;
 
         long double value = size * 8;
-        uint64_t i;
+        uint64_t i = 0;
         for (i = 0; i != UNITS_COUNT - 1 && value / factor >= 1.; ++i)
             value /= factor;
 
         boost::io::ios_flags_saver s(out);
-        out << std::fixed << std::setprecision(1) << value << units[i];
+        out << std::fixed << std::setprecision(1) << value << units[i]
+            << "(" << size * 8 << units[0] << ")";
     }
 
     return out;
