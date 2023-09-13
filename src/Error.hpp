@@ -12,7 +12,7 @@ enum Error
     success = 0,
     generic_fault = 1,
     unexpected_eof = 2,
-    checksum_failed = 3,
+    data_mismatch = 3,
     test_timeout = 4,
     unexpected_data = 5,
     user_interrupt = 6,

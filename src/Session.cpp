@@ -213,12 +213,12 @@ Session::verify(std::size_t offset, uint8_t expected_byte)
     uint8_t actual = receive_buffer_[offset];
     if (actual != expected_byte)
     {
-        std::cerr << "Checksum error on byte "
+        std::cerr << "Data byte "
                   << statistics_.received_bytes_count + offset
-                  << ": expected " << int(expected_byte)
+                  << " mismatch: expected " << int(expected_byte)
                   << " got " << int(actual) << "." << std::endl;
 
-        abort(error::checksum_failed);
+        abort(error::data_mismatch);
     }
 }
 

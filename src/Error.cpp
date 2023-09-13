@@ -27,7 +27,7 @@ struct category : boost::system::error_category
         case error::success: return "Success";
         case error::generic_fault: return "Generic fault";
         case error::unexpected_eof: return "Unexpected Eof";
-        case error::checksum_failed: return "Checksum failed";
+        case error::data_mismatch: return "Data mismatch";
         case error::test_timeout: return "Test timeout";
         case error::unexpected_data: return "Unexpected data";
         case error::user_interrupt: return "User Interrupt";
