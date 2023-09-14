@@ -215,7 +215,8 @@ Session::verify(std::size_t offset, uint8_t expected_byte)
     {
         std::cerr << "Data byte "
                   << statistics_.received_bytes_count + offset
-                  << " mismatch: expected " << int(expected_byte)
+                  << " mismatch on session " << configuration_.endpoint
+                  << ": expected " << int(expected_byte)
                   << " got " << int(actual) << "." << std::endl;
 
         abort(error::data_mismatch);
