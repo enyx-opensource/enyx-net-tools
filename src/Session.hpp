@@ -28,6 +28,7 @@
 #include <cstddef>
 #include <vector>
 #include <random>
+#include <memory>
 
 #include <boost/system/error_code.hpp>
 #include <boost/asio/deadline_timer.hpp>
@@ -47,16 +48,24 @@ public:
     Session(boost::asio::io_service & io_service,
             const SessionConfiguration & configuration);
 
+    virtual
+    void initialize();
+
     boost::system::error_code
     finalize();
 
 private:
     using buffer_type = std::vector<std::uint8_t>;
 
+
 protected:
     enum { BUFFER_SIZE = 128 << 10 };
 
 protected:
+
+    virtual std::shared_ptr<Session>
+    shared_from_child() = 0;
+
     virtual void
     async_receive(std::size_t slice_remaining_size = 0ULL) = 0;
 

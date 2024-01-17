@@ -41,20 +41,27 @@ namespace net_tester {
 
 namespace {
 
-using SessionPtr = std::unique_ptr<Session>;
+using SessionPtr = std::shared_ptr<Session>;
+
+SessionPtr
+_create_session(boost::asio::io_service & io_service,
+                const SessionConfiguration & configuration)
+{
+    if (configuration.protocol == SessionConfiguration::TCP)
+        return std::make_shared<TcpSession>(io_service, configuration);
+    else
+        return std::make_shared<UdpSession>(io_service, configuration);
+}
 
 SessionPtr
 create_session(boost::asio::io_service & io_service,
                const SessionConfiguration & configuration)
 {
-    SessionPtr session;
-    if (configuration.protocol == SessionConfiguration::TCP)
-        session.reset(new TcpSession{io_service, configuration});
-    else
-        session.reset(new UdpSession{io_service, configuration});
-
+    auto session = _create_session(io_service, configuration);
+    session->initialize();
     return session;
 }
+
 
 class Thread final
 {
@@ -101,7 +108,7 @@ private:
 
 using Threads = std::list<Thread>;
 
-using IoServicePtr = std::unique_ptr<boost::asio::io_service>;
+using IoServicePtr = std::shared_ptr<boost::asio::io_service>;
 
 using IoServices = std::vector<IoServicePtr>;
 

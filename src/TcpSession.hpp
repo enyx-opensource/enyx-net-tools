@@ -35,13 +35,28 @@
 namespace enyx {
 namespace net_tester {
 
-class TcpSession : public Session
+class TcpSession : public Session, public std::enable_shared_from_this<TcpSession>
 {
 public:
     TcpSession(boost::asio::io_service & io_service,
                const SessionConfiguration & configuration);
 
-private:
+    virtual void
+    initialize() override
+    {
+        auto self(shared_from_this());
+        socket_.open(configuration_, [this, self] { start_transfer(); });
+        io_service_.post([this, self] { start_timer(); } );
+    }
+
+protected:
+
+    virtual std::shared_ptr<Session>
+    shared_from_child() override
+    {
+        return shared_from_this();
+    }
+
     virtual void
     async_receive(std::size_t slice_remaining_size = 0ULL) override;
 
