@@ -45,13 +45,17 @@ public:
     using protocol_type = socket_type::protocol_type;
 
 public:
-    template<typename OnConnectHandler>
     explicit
-    TcpSocket(boost::asio::io_service & io_service,
-              const SessionConfiguration & configuration,
-              OnConnectHandler on_connect)
+    TcpSocket(boost::asio::io_service & io_service)
         : Socket(io_service),
           socket_(io_service_)
+    {
+    }
+
+    template<typename OnConnectHandler>
+    void
+    open(const SessionConfiguration & configuration,
+         OnConnectHandler on_connect)
     {
         switch (configuration.mode)
         {
@@ -60,7 +64,7 @@ public:
                 connect(configuration, on_connect);
                 break;
             case SessionConfiguration::SERVER:
-                listen(configuration, io_service, on_connect);
+                listen(configuration, io_service_, on_connect);
                 break;
         }
     }

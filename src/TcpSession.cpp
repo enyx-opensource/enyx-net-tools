@@ -38,30 +38,29 @@ namespace enyx {
 namespace net_tester {
 
 namespace ao = boost::asio;
-namespace pt = boost::posix_time;
 
 TcpSession::TcpSession(boost::asio::io_service & io_service,
                        const SessionConfiguration & configuration)
     : Session(io_service, configuration),
-      socket_(io_service, configuration, [this] { start_transfer(); }),
+      socket_(io_service),
       send_handler_memory_(),
       receive_handler_memory_()
 {
-    io_service.post([this] { start_timer(); } );
 }
 
 void
 TcpSession::async_receive(std::size_t slice_remaining_size)
 {
+    auto self(shared_from_this());
     // If we've sent all data allowed within the current slice.
     if (slice_remaining_size == 0)
         // The throttle will call this method again
         // when the next slice will start with a slice_remaining_size
         // set as required by bandwidth.
-        receive_throttle_.delay([this](std::size_t s){ async_receive(s); });
+        receive_throttle_.delay([this, self](std::size_t s){ async_receive(s); });
     else
     {
-        auto handler = [this, slice_remaining_size]
+        auto handler = [this, self, slice_remaining_size]
                 (boost::system::error_code const& failure,
                  std::size_t bytes_transferred) {
             on_receive(failure, bytes_transferred, slice_remaining_size);
@@ -85,7 +84,8 @@ TcpSession::finish_receive()
     if (configuration_.shutdown_policy == SessionConfiguration::RECEIVE_COMPLETE)
         socket_.shutdown_send();
 
-    auto handler = [this]
+    auto self(shared_from_this());
+    auto handler = [this, self]
             (boost::system::error_code const& failure,
              std::size_t bytes_transferred) {
         on_eof(failure, bytes_transferred);
@@ -117,8 +117,9 @@ TcpSession::on_eof(const boost::system::error_code & failure,
 void
 TcpSession::async_send(std::size_t slice_remaining_size)
 {
+    auto self(shared_from_this());
     if (slice_remaining_size == 0)
-        send_throttle_.delay([this](std::size_t s){ async_send(s); });
+        send_throttle_.delay([this, self](std::size_t s){ async_send(s); });
     else
     {
         std::size_t remaining_size = configuration_.size -
@@ -128,7 +129,7 @@ TcpSession::async_send(std::size_t slice_remaining_size)
         std::size_t offset = std::uint8_t(statistics_.sent_bytes_count);
         std::size_t size = std::min(slice_remaining_size, BUFFER_SIZE - offset);
 
-        auto handler = [this, slice_remaining_size]
+        auto handler = [this, self, slice_remaining_size]
                 (boost::system::error_code const& failure,
                  std::size_t size) {
             on_send(failure, size, slice_remaining_size);

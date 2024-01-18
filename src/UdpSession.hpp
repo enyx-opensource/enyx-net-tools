@@ -25,6 +25,7 @@
 #pragma once
 
 #include <cstddef>
+#include <memory>
 
 #include "Session.hpp"
 #include "UdpSocket.hpp"
@@ -33,13 +34,31 @@
 namespace enyx {
 namespace net_tester {
 
-class UdpSession : public Session
+class UdpSession : public Session, public std::enable_shared_from_this<UdpSession>
 {
 public:
     UdpSession(boost::asio::io_service & io_service,
                const SessionConfiguration & configuration);
 
-private:
+    virtual void
+    initialize() override
+    {
+        Session::initialize();
+        auto self(shared_from_this());
+        io_service_.post([this, self] {
+            start_timer();
+            start_transfer();
+        });
+    }
+
+protected:
+
+    virtual std::shared_ptr<Session>
+    shared_from_child() override
+    {
+        return shared_from_this();
+    }
+
     virtual void
     async_receive(std::size_t slice_remaining_size = 0ULL) override;
 

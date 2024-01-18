@@ -63,8 +63,14 @@ Session::Session(boost::asio::io_service & io_service,
       is_receive_complete_(),
       is_send_complete_()
 {
-    auto handler = [this] (const boost::system::error_code& error,
-                        int signal_number) {
+}
+
+void
+Session::initialize()
+{
+    auto self(shared_from_child());
+    auto handler = [this, self] (const boost::system::error_code& error,
+                            int signal_number) {
         if (error)
             // Signal unregistered
             return;
@@ -114,7 +120,8 @@ void
 Session::start_timer()
 {
     timeout_timer_.expires_from_now(estimate_test_duration(configuration_));
-    timeout_timer_.async_wait([this](boost::system::error_code const& failure) {
+    auto self(shared_from_child());
+    timeout_timer_.async_wait([this, self](boost::system::error_code const& failure) {
         if (failure)
             return;
 

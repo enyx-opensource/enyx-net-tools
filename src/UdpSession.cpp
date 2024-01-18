@@ -38,9 +38,6 @@
 namespace enyx {
 namespace net_tester {
 
-namespace ao = boost::asio;
-namespace pt = boost::posix_time;
-
 UdpSession::UdpSession(boost::asio::io_service & io_service,
                        const SessionConfiguration & configuration)
     : Session(io_service, configuration),
@@ -51,21 +48,21 @@ UdpSession::UdpSession(boost::asio::io_service & io_service,
       distribution_{configuration_.packet_size.low(),
                     configuration_.packet_size.high()}
 {
-    io_service.post([this] { start_timer(); start_transfer(); });
 }
 
 void
 UdpSession::async_receive(std::size_t slice_remaining_size)
 {
+    auto self(shared_from_this());
     // If we've sent all data allowed within the current slice.
     if (slice_remaining_size == 0)
         // The throttle will call this method again
         // when the next slice will start with a slice_remaining_size
         // set as required by bandwidth.
-        receive_throttle_.delay([this](std::size_t s){ async_receive(s); });
+        receive_throttle_.delay([this, self](std::size_t s){ async_receive(s); });
     else
     {
-        auto handler = [this, slice_remaining_size]
+        auto handler = [this, self, slice_remaining_size]
                 (boost::system::error_code const& failure,
                  std::size_t size) {
             on_receive(failure, size, slice_remaining_size);
@@ -91,8 +88,9 @@ UdpSession::finish_receive()
 void
 UdpSession::async_send(std::size_t slice_remaining_size)
 {
+    auto self(shared_from_this());
     if (slice_remaining_size == 0)
-        send_throttle_.delay([this](std::size_t s){ async_send(s); });
+        send_throttle_.delay([this, self](std::size_t s){ async_send(s); });
     else
     {
         std::size_t const remaining_size = configuration_.size -
@@ -104,7 +102,7 @@ UdpSession::async_send(std::size_t slice_remaining_size)
                                                    get_max_datagram_size());
         assert(datagram_size <= BUFFER_SIZE - offset);
 
-        auto handler = [this, slice_remaining_size]
+        auto handler = [this, self, slice_remaining_size]
                 (boost::system::error_code const& failure,
                  std::size_t size) {
             on_send(failure, size, slice_remaining_size);
