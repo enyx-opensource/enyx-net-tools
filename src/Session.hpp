@@ -24,11 +24,11 @@
 
 #pragma once
 
-#include <cstdint>
 #include <cstddef>
-#include <vector>
-#include <random>
+#include <cstdint>
 #include <memory>
+#include <random>
+#include <vector>
 
 #include <boost/system/error_code.hpp>
 #include <boost/asio/deadline_timer.hpp>

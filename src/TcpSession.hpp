@@ -25,6 +25,7 @@
 #pragma once
 
 #include <cstddef>
+#include <memory>
 
 #include <boost/system/error_code.hpp>
 

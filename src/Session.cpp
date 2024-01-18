@@ -41,7 +41,7 @@ namespace ao = boost::asio;
 namespace pt = boost::posix_time;
 
 Session::Session(boost::asio::io_service & io_service,
-                        const SessionConfiguration & configuration)
+                 const SessionConfiguration & configuration)
     : io_service_(io_service),
       configuration_(configuration),
 #ifdef SIGHUP

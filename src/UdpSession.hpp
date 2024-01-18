@@ -25,6 +25,7 @@
 #pragma once
 
 #include <cstddef>
+#include <memory>
 
 #include "Session.hpp"
 #include "UdpSocket.hpp"
