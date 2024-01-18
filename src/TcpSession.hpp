@@ -44,6 +44,7 @@ public:
     virtual void
     initialize() override
     {
+        Session::initialize();
         auto self(shared_from_this());
         socket_.open(configuration_, [this, self] { start_transfer(); });
         io_service_.post([this, self] { start_timer(); } );
